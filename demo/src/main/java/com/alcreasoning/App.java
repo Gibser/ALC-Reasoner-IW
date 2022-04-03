@@ -53,6 +53,7 @@ public final class App {
                 Matcher m = r.matcher(p.toString());
                 if(m.find()){
                     System.out.print(m.group(1));
+                    System.out.print(".");
                 }
                 ce.getFiller().accept(this);
             }
@@ -69,12 +70,14 @@ public final class App {
 
             public void visit(OWLObjectIntersectionOf intersection) {
                 int list_len = intersection.getOperandsAsList().size(), i = 0;
+                System.out.print("(");
                 for(OWLClassExpression c : intersection.getOperands()){
                     c.accept(this);
                     if(++i < list_len){
                         System.out.print(" and ");
                     }
                 }
+                System.out.print(")");
             }
         };
         try {
