@@ -16,10 +16,14 @@ ObjectProperty: <http://www.semanticweb.org/gpepp/ontologies/2022/3/untitled-ont
 Class: <http://www.semanticweb.org/gpepp/ontologies/2022/3/untitled-ontology-3#C>
 
     EquivalentTo: 
-        ((not (<http://www.semanticweb.org/gpepp/ontologies/2022/3/untitled-ontology-3#isFailureOf> some 
+        <http://www.semanticweb.org/gpepp/ontologies/2022/3/untitled-ontology-3#Column>
+         and (<http://www.semanticweb.org/gpepp/ontologies/2022/3/untitled-ontology-3#Column> or <http://www.semanticweb.org/gpepp/ontologies/2022/3/untitled-ontology-3#Pillar>)
+         and (not (<http://www.semanticweb.org/gpepp/ontologies/2022/3/untitled-ontology-3#Column>))
+         and (not (<http://www.semanticweb.org/gpepp/ontologies/2022/3/untitled-ontology-3#isFailureOf> some 
             (<http://www.semanticweb.org/gpepp/ontologies/2022/3/untitled-ontology-3#Column>
              and <http://www.semanticweb.org/gpepp/ontologies/2022/3/untitled-ontology-3#Pillar>)))
-         and (<http://www.semanticweb.org/gpepp/ontologies/2022/3/untitled-ontology-3#isFailureOf> some <http://www.semanticweb.org/gpepp/ontologies/2022/3/untitled-ontology-3#Pillar>)) or (<http://www.semanticweb.org/gpepp/ontologies/2022/3/untitled-ontology-3#isFailureOf> some <http://www.semanticweb.org/gpepp/ontologies/2022/3/untitled-ontology-3#Column>)
+         and (<http://www.semanticweb.org/gpepp/ontologies/2022/3/untitled-ontology-3#isFailureOf> some <http://www.semanticweb.org/gpepp/ontologies/2022/3/untitled-ontology-3#Column>)
+         and (<http://www.semanticweb.org/gpepp/ontologies/2022/3/untitled-ontology-3#isFailureOf> some <http://www.semanticweb.org/gpepp/ontologies/2022/3/untitled-ontology-3#Pillar>)
     
     
 Class: <http://www.semanticweb.org/gpepp/ontologies/2022/3/untitled-ontology-3#Column>
