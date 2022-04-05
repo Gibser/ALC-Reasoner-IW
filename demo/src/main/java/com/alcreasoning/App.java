@@ -9,6 +9,7 @@ import org.semanticweb.owlapi.model.OWLEquivalentClassesAxiom;
 import org.semanticweb.owlapi.model.OWLObject;
 import org.semanticweb.owlapi.model.OWLObjectComplementOf;
 import org.semanticweb.owlapi.model.OWLObjectIntersectionOf;
+import org.semanticweb.owlapi.model.OWLObjectSomeValuesFrom;
 import org.semanticweb.owlapi.model.OWLObjectUnionOf;
 import org.semanticweb.owlapi.model.OWLObjectVisitor;
 import org.semanticweb.owlapi.model.OWLOntology;
@@ -18,6 +19,7 @@ import org.semanticweb.owlapi.model.OWLOntologyManager;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * Hello world!
@@ -32,52 +34,30 @@ public final class App {
      */
     public static void main(String[] args) {
         OWLOntologyManager man = OWLManager.createOWLOntologyManager();
-        File file = new File("H:\\Università\\Progetto IW\\example.owl");
+        File file = new File("H:\\Università\\Progetto IW\\concept.owl");
         System.out.println("\n\n\nLogical Axioms:\n");
-        HashSet<OWLObject> rule_set = new HashSet<OWLObject>();
+        HashSet<OWLObject> L_x = new HashSet<OWLObject>();
+        HashSet<OWLObject> exs = new HashSet<OWLObject>();
         FunnyVisitor v = new FunnyVisitor();
-        AndVisitor and_visitor = new AndVisitor();
-        OrVisitor or_visitor = new OrVisitor();
 
+        OWLObjectVisitor eq = new OWLObjectVisitor() {
+            public void visit(OWLEquivalentClassesAxiom ax) {
+                L_x.add(ax.getOperandsAsList().get(1));             
+            }
+        };
         try {
             OWLOntology o = man.loadOntologyFromOntologyDocument(file);
+            Reasoner r = new Reasoner();
+            AndVisitor and = new AndVisitor();
             //System.out.println(o.getLogicalAxioms());
-            for(OWLAxiom ax : o.getLogicalAxioms()){
-                    //System.out.println(ax.getNNF());
-                    //ax.getNNF().accept(v);
-                    ax.getNNF().accept(and_visitor);
-                    rule_set.addAll(and_visitor.get_rule_set_and_reset());
-                    /*
-                    for(OWLObject obj : rule_set){
-                        obj.accept(or_visitor);
-                    }
-                    */
-                    //rule_set.addAll(or_visitor.get_rule_set_and_reset());
-                    for(OWLObject obj : rule_set){
-                        obj.accept(v);
-                        System.out.println();
-                    }
-
-                    HashSet<OWLObject> atomic_concept = new HashSet<OWLObject>();
-                    HashSet<OWLObject> not_atomic_concept = new HashSet<OWLObject>();
-
-                    System.out.println();
-                    for(OWLObject obj : rule_set){
-                        if(obj instanceof OWLClass){
-                           atomic_concept.add((OWLClass)obj);
-                        }
-                        else if(obj instanceof OWLObjectComplementOf){
-                            not_atomic_concept.add((OWLObjectComplementOf) obj);
-                        }
-                    }
-
-                    for(OWLObject obj : atomic_concept){
-                        if(not_atomic_concept.contains(((OWLClass)obj).getObjectComplementOf())){
-                            System.out.println("CLASH!");
-                        }
-                    }
-                    //((OWLEquivalentClassesAxiom)ax).namedClasses().forEach(System.out::println);
-                    System.out.println("\n\n");
+            for(OWLAxiom ax : o.getLogicalAxioms()){ 
+                ax.getNNF().accept(v);
+                System.out.println();
+                ax.getNNF().accept(eq);
+                System.out.print(r.tableau_algorithm(0, L_x));
+                //exs = and.get_rule_set_and_reset().stream().filter(e -> (e instanceof OWLObjectSomeValuesFrom)).collect(Collectors.toCollection(HashSet::new));
+                //exs.stream().forEach(e -> e.accept(v));
+                System.out.println("\n\n");
             }
             //o.logicalAxioms().forEach(System.out::println);
         } catch (OWLOntologyCreationException e) {
