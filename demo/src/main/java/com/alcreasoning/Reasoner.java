@@ -116,7 +116,8 @@ public class Reasoner {
                         L_x.remove(disj);
                     }
                 }
-                // Se finiscono i disgiunti e clash_free è ancora false, vuol dire che nessuna combinazione di disgiunti evita un clash, quindi posso ritornare false
+                // Se finiscono i disgiunti e clash_free è ancora false, vuol dire che nessuna combinazione di disgiunti evita un clash, 
+                // quindi posso ritornare false
                 if(!clash_free){
                     return false;
                 }
