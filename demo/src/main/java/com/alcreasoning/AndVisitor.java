@@ -29,4 +29,10 @@ public class AndVisitor implements OWLObjectVisitor{
         rule_set.clear();
         return temp;
     }
+
+    public HashSet<OWLObject> get_rule_set(){
+        HashSet<OWLObject> temp;
+        temp = (HashSet<OWLObject>)rule_set.clone();
+        return temp;
+    }
 }

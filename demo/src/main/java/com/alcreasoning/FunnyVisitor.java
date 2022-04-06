@@ -10,12 +10,17 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.semanticweb.owlapi.model.OWLClass;
+import org.semanticweb.owlapi.model.OWLClassAssertionAxiom;
 import org.semanticweb.owlapi.model.OWLClassExpression;
 import org.semanticweb.owlapi.model.OWLEquivalentClassesAxiom;
+import org.semanticweb.owlapi.model.OWLIndividual;
+import org.semanticweb.owlapi.model.OWLNamedIndividual;
 import org.semanticweb.owlapi.model.OWLObject;
 import org.semanticweb.owlapi.model.OWLObjectAllValuesFrom;
 import org.semanticweb.owlapi.model.OWLObjectComplementOf;
 import org.semanticweb.owlapi.model.OWLObjectIntersectionOf;
+import org.semanticweb.owlapi.model.OWLObjectProperty;
+import org.semanticweb.owlapi.model.OWLObjectPropertyAssertionAxiom;
 import org.semanticweb.owlapi.model.OWLObjectPropertyExpression;
 import org.semanticweb.owlapi.model.OWLObjectSomeValuesFrom;
 import org.semanticweb.owlapi.model.OWLObjectUnionOf;
@@ -27,7 +32,7 @@ public class FunnyVisitor implements OWLObjectVisitor{
     private Pattern r;
 
     public FunnyVisitor(){
-        regexp_for_names = "[^#]*#([a-zA-Z0-9]+)>$";
+        regexp_for_names = "[^#]*#([a-zA-Z0-9_-]+)>$";
         r = Pattern.compile(regexp_for_names);
     }
     
@@ -60,6 +65,13 @@ public class FunnyVisitor implements OWLObjectVisitor{
 
     public void visit(OWLClass class_expr) {
         System.out.print(class_expr.getIRI().getShortForm());
+    }
+
+    public void visit(OWLNamedIndividual ind) {
+        Matcher m = r.matcher(ind.toString());
+        if(m.find()){
+            System.out.print(m.group(1));
+        }
     }
 
     public void visit(OWLObjectIntersectionOf intersection) {
@@ -95,5 +107,35 @@ public class FunnyVisitor implements OWLObjectVisitor{
             System.out.print(".");
         }
         ce.getFiller().accept(this);
+    }
+
+    public void visit(OWLClassAssertionAxiom class_axiom) {
+        class_axiom.getClassExpression().accept(this);
+        System.out.print("(");
+        class_axiom.getIndividual().accept(this);
+        System.out.print(")");
+    }
+
+    public void visit(OWLObjectPropertyAssertionAxiom relation) {
+        relation.getProperty().accept(this);
+        System.out.print("(");
+        relation.getSubject().accept(this);
+        System.out.print(", ");
+        relation.getObject().accept(this);
+        System.out.print(")");
+    }
+
+    public void visit(OWLObjectProperty relation_property) {
+        Matcher m = r.matcher(relation_property.toString());
+        if (m.find()) {
+            System.out.print(m.group(1));
+        }
+    }
+
+    public void visit(OWLObjectPropertyExpression relation_property) {
+        Matcher m = r.matcher(relation_property.toString());
+        if (m.find()) {
+            System.out.print(m.group(1));
+        }
     }
 }

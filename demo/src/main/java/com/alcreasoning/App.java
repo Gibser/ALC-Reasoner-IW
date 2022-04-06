@@ -2,10 +2,14 @@ package com.alcreasoning;
 import java.io.File;
 
 import org.semanticweb.owlapi.apibinding.OWLManager;
+import org.semanticweb.owlapi.model.IRI;
 import org.semanticweb.owlapi.model.OWLAxiom;
 import org.semanticweb.owlapi.model.OWLClass;
 import org.semanticweb.owlapi.model.OWLClassExpression;
+import org.semanticweb.owlapi.model.OWLDataFactory;
 import org.semanticweb.owlapi.model.OWLEquivalentClassesAxiom;
+import org.semanticweb.owlapi.model.OWLIndividual;
+import org.semanticweb.owlapi.model.OWLNamedIndividual;
 import org.semanticweb.owlapi.model.OWLObject;
 import org.semanticweb.owlapi.model.OWLObjectComplementOf;
 import org.semanticweb.owlapi.model.OWLObjectIntersectionOf;
@@ -36,25 +40,32 @@ public final class App {
         OWLOntologyManager man = OWLManager.createOWLOntologyManager();
         File file = new File("H:\\Università\\Progetto IW\\concept.owl");
         System.out.println("\n\n\nLogical Axioms:\n");
+        HashSet<OWLClassExpression> c = new HashSet<OWLClassExpression>();
         HashSet<OWLObject> L_x = new HashSet<OWLObject>();
         HashSet<OWLObject> exs = new HashSet<OWLObject>();
         FunnyVisitor v = new FunnyVisitor();
 
         OWLObjectVisitor eq = new OWLObjectVisitor() {
             public void visit(OWLEquivalentClassesAxiom ax) {
-                L_x.add(ax.getOperandsAsList().get(1));             
+                c.add(ax.getOperandsAsList().get(0));  
+                L_x.add(ax.getOperandsAsList().get(1));   
             }
         };
         try {
             OWLOntology o = man.loadOntologyFromOntologyDocument(file);
-            Reasoner r = new Reasoner();
+
+            IRI ontologyIRI = o.getOntologyID().getOntologyIRI().get();
+            OWLDataFactory factory = man.getOWLDataFactory();
+            OWLNamedIndividual x = factory.getOWLNamedIndividual(IRI.create(ontologyIRI + "#x_0"));
             AndVisitor and = new AndVisitor();
             //System.out.println(o.getLogicalAxioms());
             for(OWLAxiom ax : o.getLogicalAxioms()){ 
                 ax.getNNF().accept(v);
-                System.out.println();
+                //System.out.println(ax);
                 ax.getNNF().accept(eq);
-                System.out.print(r.tableau_algorithm(0, L_x));
+                Reasoner r = new Reasoner(x, c.iterator().next(), factory, ontologyIRI);
+                System.out.println();
+                System.out.print(r.tableau_algorithm(x, L_x, 0));
                 //exs = and.get_rule_set_and_reset().stream().filter(e -> (e instanceof OWLObjectSomeValuesFrom)).collect(Collectors.toCollection(HashSet::new));
                 //exs.stream().forEach(e -> e.accept(v));
                 System.out.println("\n\n");
