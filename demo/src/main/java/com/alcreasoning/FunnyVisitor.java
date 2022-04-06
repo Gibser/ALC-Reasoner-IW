@@ -1,6 +1,7 @@
 package com.alcreasoning;
 
 import org.semanticweb.owlapi.model.OWLObjectVisitor;
+import org.semanticweb.owlapi.model.OWLSubClassOfAxiom;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -137,5 +138,11 @@ public class FunnyVisitor implements OWLObjectVisitor{
         if (m.find()) {
             System.out.print(m.group(1));
         }
+    }
+
+    public void visit(OWLSubClassOfAxiom subclass){
+        subclass.getSubClass().accept(this);
+        System.out.print(" subclass of ");
+        subclass.getSuperClass().accept(this);
     }
 }
