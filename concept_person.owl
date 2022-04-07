@@ -1,3 +1,4 @@
+Prefix: dc: <http://purl.org/dc/elements/1.1/>
 Prefix: owl: <http://www.w3.org/2002/07/owl#>
 Prefix: rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
 Prefix: rdfs: <http://www.w3.org/2000/01/rdf-schema#>
@@ -12,7 +13,8 @@ Ontology: <http://www.semanticweb.org/gpepp/ontologies/2022/3/untitled-ontology-
 Class: <http://www.semanticweb.org/gpepp/ontologies/2022/3/untitled-ontology-12#C>
 
     EquivalentTo: 
-        <http://www.semanticweb.org/gpepp/ontologies/2022/3/untitled-ontology-12#Person> or (not (<http://www.semanticweb.org/gpepp/ontologies/2022/3/untitled-ontology-12#Professor>))
+        <http://www.semanticweb.org/gpepp/ontologies/2022/3/untitled-ontology-12#Person> or ((<http://www.semanticweb.org/gpepp/ontologies/2022/3/untitled-ontology-12#Person> or (not (<http://www.semanticweb.org/gpepp/ontologies/2022/3/untitled-ontology-12#Person>)))
+         and (not (<http://www.semanticweb.org/gpepp/ontologies/2022/3/untitled-ontology-12#Professor>)))
     
     
 Class: <http://www.semanticweb.org/gpepp/ontologies/2022/3/untitled-ontology-12#Person>

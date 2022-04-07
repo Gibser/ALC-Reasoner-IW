@@ -11,7 +11,6 @@ import org.semanticweb.owlapi.model.OWLDataFactory;
 import org.semanticweb.owlapi.model.OWLEquivalentClassesAxiom;
 import org.semanticweb.owlapi.model.OWLLogicalAxiom;
 import org.semanticweb.owlapi.model.OWLObject;
-import org.semanticweb.owlapi.model.OWLObjectComplementOf;
 import org.semanticweb.owlapi.model.OWLObjectUnionOf;
 import org.semanticweb.owlapi.model.OWLObjectVisitor;
 import org.semanticweb.owlapi.model.OWLOntology;
@@ -47,15 +46,18 @@ public class OntologyPreprocessor {
 
     public OntologyPreprocessor(String concept_path){
         File concept_file = new File(concept_path);
-        OWLOntologyManager man = OWLManager.createOWLOntologyManager();
-        this.factory = man.getOWLDataFactory();
+        this.factory = tbox_man.getOWLDataFactory();
         this.v = new FunnyVisitor();
 
         try{
-            this.concept = man.loadOntologyFromOntologyDocument(concept_file);
+            this.concept = tbox_man.loadOntologyFromOntologyDocument(concept_file);
         }catch(OWLOntologyCreationException e){
             e.printStackTrace();
         }
+    }
+
+    public OWLOntology getTBox(){
+        return this.tbox;
     }
 
     public IRI get_concept_ontology_IRI(){

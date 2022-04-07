@@ -42,15 +42,24 @@ public final class App {
     public static void main(String[] args) {
         // Implementare input C da prompt o campo testo
         // quindi va costruita con il data factory
-        OntologyPreprocessor preproc = new OntologyPreprocessor("H:\\Università\\Progetto IW\\concept_person.owl", "H:\\Università\\Progetto IW\\tbox_person.owl");
+        OntologyPreprocessor preproc = new OntologyPreprocessor("H:\\Università\\Progetto IW\\concept_person.owl", "H:\\Università\\Progetto IW\\prova_preprocessing_or_and.owl");
         System.out.println("\n\n\nLogical Axioms:\n");
         
         FunnyVisitor v = new FunnyVisitor();
+        OrAndPreprocessorVisitor p = new OrAndPreprocessorVisitor();
 
-        Pair<OWLClassExpression, Pair<HashSet<OWLObject>, HashSet<OWLObject>>> KB_and_Ĉ = preproc.preprocess_tbox_and_concept();
+        for(OWLAxiom ax : preproc.getTBox().getLogicalAxioms()){
+            System.out.print("Assioma: ");
+            ax.accept(v);
+            System.out.print("\nPreprocessing: ");
+            ax.accept(p);
+            p.getLogicalAxiom().accept(v);
+            System.out.println("\n\n");
+        }
+        //Pair<OWLClassExpression, Pair<HashSet<OWLObject>, HashSet<OWLObject>>> KB_and_Ĉ = preproc.preprocess_tbox_and_concept();
 
-        Reasoner r = new Reasoner(KB_and_Ĉ.getKey(), KB_and_Ĉ.getValue().getKey(), KB_and_Ĉ.getValue().getValue(), preproc.get_tbox_ontology_IRI());
-        System.out.println(r.check_consistency());
+        //Reasoner r = new Reasoner(KB_and_Ĉ.getKey(), KB_and_Ĉ.getValue().getKey(), KB_and_Ĉ.getValue().getValue(), preproc.get_tbox_ontology_IRI());
+        //System.out.println(r.check_consistency());
 
         /*
         try {

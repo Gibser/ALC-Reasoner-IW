@@ -1,0 +1,32 @@
+Prefix(:=<http://www.semanticweb.org/gpepp/ontologies/2022/3/untitled-ontology-15#>)
+Prefix(owl:=<http://www.w3.org/2002/07/owl#>)
+Prefix(rdf:=<http://www.w3.org/1999/02/22-rdf-syntax-ns#>)
+Prefix(xml:=<http://www.w3.org/XML/1998/namespace>)
+Prefix(xsd:=<http://www.w3.org/2001/XMLSchema#>)
+Prefix(rdfs:=<http://www.w3.org/2000/01/rdf-schema#>)
+
+
+Ontology(<http://www.semanticweb.org/gpepp/ontologies/2022/3/untitled-ontology-15>
+
+Declaration(Class(<http://www.semanticweb.org/gpepp/ontologies/2022/3/untitled-ontology-11#A>))
+Declaration(Class(:A))
+Declaration(Class(:B))
+Declaration(Class(:C))
+Declaration(Class(:D))
+Declaration(Class(:K))
+Declaration(ObjectProperty(:R))
+
+############################
+#   Classes
+############################
+
+# Class: :D (:D)
+
+EquivalentClasses(:D ObjectIntersectionOf(ObjectUnionOf(<http://www.semanticweb.org/gpepp/ontologies/2022/3/untitled-ontology-11#A> :B) ObjectUnionOf(<http://www.semanticweb.org/gpepp/ontologies/2022/3/untitled-ontology-11#A> ObjectUnionOf(:B ObjectComplementOf(:B))) ObjectUnionOf(ObjectComplementOf(<http://www.semanticweb.org/gpepp/ontologies/2022/3/untitled-ontology-11#A>) ObjectComplementOf(:B)) ObjectComplementOf(<http://www.semanticweb.org/gpepp/ontologies/2022/3/untitled-ontology-11#A>)))
+
+# Class: :K (:K)
+
+EquivalentClasses(:K ObjectSomeValuesFrom(:R ObjectIntersectionOf(:B ObjectUnionOf(:A ObjectComplementOf(:A)))))
+
+
+)
