@@ -4,8 +4,11 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.HashSet;
 
+import org.eclipse.rdf4j.model.vocabulary.OWL;
 import org.semanticweb.owlapi.apibinding.OWLManager;
 import org.semanticweb.owlapi.model.IRI;
+import org.semanticweb.owlapi.model.OWLAxiom;
+import org.semanticweb.owlapi.model.OWLClass;
 import org.semanticweb.owlapi.model.OWLClassExpression;
 import org.semanticweb.owlapi.model.OWLDataFactory;
 import org.semanticweb.owlapi.model.OWLEquivalentClassesAxiom;
@@ -27,14 +30,20 @@ public class OntologyPreprocessor {
 
     private OWLOntology concept;
     private OWLOntology tbox;
+    private HashSet<OWLLogicalAxiom> tbox_set;
     private OWLDataFactory factory;
     private FunnyVisitor v;
+    private AtomicConceptVisitor atomic_visitor;
+    private OrAndPreprocessorVisitor or_and_preproc_visitor;
 
     public OntologyPreprocessor(String concept_path, String tbox_path){
         File concept_file = new File(concept_path);
         File tbox_file = new File(tbox_path);
         this.factory = concept_man.getOWLDataFactory();
         this.v = new FunnyVisitor();
+        this.atomic_visitor = new AtomicConceptVisitor();
+        this.or_and_preproc_visitor = new OrAndPreprocessorVisitor();
+        this.tbox_set = new HashSet<>();
 
         try{
             this.tbox = tbox_man.loadOntologyFromOntologyDocument(tbox_file);
@@ -48,6 +57,10 @@ public class OntologyPreprocessor {
         File concept_file = new File(concept_path);
         this.factory = tbox_man.getOWLDataFactory();
         this.v = new FunnyVisitor();
+        this.v = new FunnyVisitor();
+        this.atomic_visitor = new AtomicConceptVisitor();
+        this.or_and_preproc_visitor = new OrAndPreprocessorVisitor();
+        this.tbox_set = new HashSet<>();
 
         try{
             this.concept = tbox_man.loadOntologyFromOntologyDocument(concept_file);
@@ -159,6 +172,97 @@ public class OntologyPreprocessor {
         Pair<OWLClassExpression, Pair<HashSet<OWLObject>, HashSet<OWLObject>>> ret = new Pair<>(Ĉ, KB);
 
         return ret;
+    }
+
+    private void preprocess_and_or_tbox(){
+        for(OWLLogicalAxiom axm : this.tbox.getLogicalAxioms()){
+            axm.getNNF().accept(this.or_and_preproc_visitor);
+            this.tbox_set.add(this.or_and_preproc_visitor.getLogicalAxiom());
+        }
+    }
+
+    private OWLClass get_atomic_left_side(OWLLogicalAxiom axm){
+        if(!this.is_left_side_atomic(axm))
+            return null;
+
+        if(axm instanceof OWLEquivalentClassesAxiom)
+            return (OWLClass)((OWLEquivalentClassesAxiom)axm).getOperandsAsList().get(0);
+        else if(axm instanceof OWLSubClassOfAxiom)
+            return (OWLClass)((OWLSubClassOfAxiom)axm).getSubClass();
+        else
+            return null;
+    }
+
+    private boolean is_left_side_atomic(OWLLogicalAxiom axm){
+        if(axm instanceof OWLEquivalentClassesAxiom)
+            return ((OWLEquivalentClassesAxiom)axm).getOperandsAsList().get(0) instanceof OWLClass;
+        else if(axm instanceof OWLSubClassOfAxiom)
+            return ((OWLSubClassOfAxiom)axm).getSubClass() instanceof OWLClass;
+        else
+            return false;
+    }
+
+    private boolean is_axiom_acyclic(OWLLogicalAxiom axm){
+        axm.accept(this.atomic_visitor);
+        HashSet<OWLClass> left_side = this.atomic_visitor.get_left_side_concepts_and_clear();
+        HashSet<OWLClass> right_side = this.atomic_visitor.get_right_side_concepts_and_clear();
+
+        return !right_side.containsAll(left_side);
+    }
+
+    private boolean is_class_not_in_left_side(OWLClass concept, HashSet<OWLClass> left_side_T_u){
+        return !left_side_T_u.contains(concept);
+    }
+
+    private boolean is_T_u_graph_acyclic(OWLLogicalAxiom axm, HashSet<OWLClass> left_side_T_u, HashSet<OWLClass> right_side_T_u){
+        axm.accept(this.atomic_visitor);
+        HashSet<OWLClass> left_side = this.atomic_visitor.get_left_side_concepts_and_clear();
+        HashSet<OWLClass> right_side = this.atomic_visitor.get_right_side_concepts_and_clear();
+
+        HashSet<OWLClass> left_right_intersection = new HashSet<>(left_side_T_u);
+        HashSet<OWLClass> right_left_intersection = new HashSet<>(right_side_T_u);
+        
+        left_right_intersection.retainAll(right_side);
+        right_left_intersection.retainAll(left_side);
+
+        boolean left_right_not_present = left_right_intersection.size() == 0;
+        boolean right_left_not_present = right_left_intersection.size() == 0;
+
+        return right_left_not_present || left_right_not_present;
+
+    }
+
+    public Pair<HashSet<OWLLogicalAxiom>, HashSet<OWLLogicalAxiom>> partition_TBox(){
+        this.preprocess_and_or_tbox();
+        
+        HashSet<OWLLogicalAxiom> T_g = new HashSet<>();
+        HashSet<OWLLogicalAxiom> T_u = new HashSet<>();
+
+        HashSet<OWLClass> left_side_T_u = new HashSet<>();
+        HashSet<OWLClass> right_side_T_u = new HashSet<>();
+
+        for(OWLLogicalAxiom axm : this.tbox_set){
+            if(!is_left_side_atomic(axm))
+                T_g.add(axm);
+            else{
+                /*
+                boolean is_in_left_side = this.is_class_not_in_left_side(this.get_atomic_left_side(axm), left_side_T_u);
+                boolean is_T_u_acyclic = this.is_T_u_graph_acyclic(axm, left_side_T_u, right_side_T_u);
+                boolean is_axiom_acyclic = this.is_axiom_acyclic(axm);
+
+                System.out.println(is_in_left_side + " " + is_T_u_acyclic + " " + is_axiom_acyclic);
+                */
+                if(
+                    this.is_axiom_acyclic(axm)                                                       &&
+                    this.is_class_not_in_left_side(this.get_atomic_left_side(axm), left_side_T_u)    &&
+                    this.is_T_u_graph_acyclic(axm, left_side_T_u, right_side_T_u)                        
+                  )
+                    T_u.add(axm);
+                else
+                    T_g.add(axm);
+            }
+        }
+        return new Pair<HashSet<OWLLogicalAxiom>, HashSet<OWLLogicalAxiom>>(T_g, T_u);
     }
     
 }

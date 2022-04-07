@@ -48,14 +48,16 @@ public class OrAndPreprocessorVisitor implements OWLObjectVisitor{
             */
             if(!ret_expr.equals(this.factory.getOWLThing())){
                 OWLObjectComplementOf not_a = this.factory.getOWLObjectComplementOf(ret_expr);
-                if(!ret_expr.equals(this.factory.getOWLNothing())){
-                    if(!union.getOperands().contains(not_a.getNNF())) //&& !ret_expr.equals(this.factory.getOWLNothing()))
-                        operands.add(ret_expr);
-                    else{
-                        ret_expr = this.factory.getOWLThing();
-                        return;
-                    }
+
+                if(ret_expr.equals(this.factory.getOWLNothing())) continue;
+
+                if(!union.getOperands().contains(not_a.getNNF())) //&& !ret_expr.equals(this.factory.getOWLNothing()))
+                    operands.add(ret_expr);
+                else{
+                    ret_expr = this.factory.getOWLThing();
+                    return;
                 }
+                
             }
             else
                 return;
@@ -96,14 +98,16 @@ public class OrAndPreprocessorVisitor implements OWLObjectVisitor{
             */
             if(!ret_expr.equals(this.factory.getOWLNothing())){
                 OWLObjectComplementOf not_a = this.factory.getOWLObjectComplementOf(ret_expr);
-                if(!ret_expr.equals(this.factory.getOWLThing())){
-                    if(!intersection.getOperands().contains(not_a.getNNF())) //&& !ret_expr.equals(this.factory.getOWLThing()))
-                        operands.add(ret_expr);
-                    else{
-                        ret_expr = this.factory.getOWLNothing();
-                        return;
-                    }
+                
+                if(ret_expr.equals(this.factory.getOWLThing())) continue;
+
+                if(!intersection.getOperands().contains(not_a.getNNF())) //&& !ret_expr.equals(this.factory.getOWLThing()))
+                    operands.add(ret_expr);
+                else{
+                    ret_expr = this.factory.getOWLNothing();
+                    return;
                 }
+                
             }
             else
                 return;

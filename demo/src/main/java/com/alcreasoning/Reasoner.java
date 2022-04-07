@@ -406,6 +406,3 @@ public class Reasoner {
         return clash_free;
     }
 }
-
-
-
