@@ -24,7 +24,9 @@ import org.semanticweb.owlapi.model.OWLObjectPropertyExpression;
 import org.semanticweb.owlapi.model.OWLObjectSomeValuesFrom;
 import org.semanticweb.owlapi.model.OWLObjectUnionOf;
 
-
+/**
+    OWLObjectVisitor utilizzato per stampare assiomi nel terminale come formula in logica descrittiva
+*/
 public class FunnyVisitor implements OWLObjectVisitor{
     
     private String regexp_for_names;

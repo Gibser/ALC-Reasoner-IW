@@ -15,6 +15,10 @@ import org.semanticweb.owlapi.model.OWLObjectUnionOf;
 import org.semanticweb.owlapi.model.OWLObjectVisitor;
 import org.semanticweb.owlapi.model.OWLSubClassOfAxiom;
 
+
+/**
+    OWLObjectVisitor che estrae i concetti atomici dalla parte sinistra e destra di un assioma
+*/
 public class AtomicConceptVisitor implements OWLObjectVisitor{
 
     private HashSet<OWLClass> concepts;

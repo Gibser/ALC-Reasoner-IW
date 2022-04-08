@@ -162,12 +162,49 @@ public class OntologyPreprocessor {
         return conjunction;
     }
 
+    private OWLClassExpression preprocess_tbox(HashSet<OWLLogicalAxiom> T_g){
+        HashSet<OWLClassExpression> preprocessed_tbox = new HashSet<>();
+        OWLClassExpression conjunction = null;
+
+        for(OWLLogicalAxiom ax : T_g){
+            ///
+            System.out.print("TBox: ");
+            ax.getNNF().accept(v);
+            System.out.println();
+            ///
+            if(ax instanceof OWLSubClassOfAxiom)
+                preprocessed_tbox.add(preprocess_subclassof((OWLSubClassOfAxiom)ax));
+            else if(ax instanceof OWLEquivalentClassesAxiom)
+                preprocessed_tbox.addAll(this.preprocess_equivalence((OWLEquivalentClassesAxiom)ax));
+        }
+        if(preprocessed_tbox.size() > 1)
+            conjunction = this.factory.getOWLObjectIntersectionOf(preprocessed_tbox);
+        else if(preprocessed_tbox.size() == 1)
+            conjunction = preprocessed_tbox.iterator().next();
+        return conjunction;
+    }
+
     public Pair<OWLClassExpression, Pair<HashSet<OWLObject>, HashSet<OWLObject>>> preprocess_tbox_and_concept(){
         Pair<HashSet<OWLObject>, HashSet<OWLObject>> KB = this.preprocess_concept();
         OWLClassExpression Ĉ = this.preprocess_tbox();
+        
+        if(Ĉ != null){
+            KB.getValue().add(Ĉ);
+            KB.getKey().add(Ĉ);
+        }
+        Pair<OWLClassExpression, Pair<HashSet<OWLObject>, HashSet<OWLObject>>> ret = new Pair<>(Ĉ, KB);
 
-        KB.getValue().add(Ĉ);
-        KB.getKey().add(Ĉ);
+        return ret;
+    }
+
+    public Pair<OWLClassExpression, Pair<HashSet<OWLObject>, HashSet<OWLObject>>> preprocess_tbox_and_concept(HashSet<OWLLogicalAxiom> T_g){
+        Pair<HashSet<OWLObject>, HashSet<OWLObject>> KB = this.preprocess_concept();
+        OWLClassExpression Ĉ = this.preprocess_tbox(T_g);
+        
+        if(Ĉ != null){
+            KB.getValue().add(Ĉ);
+            KB.getKey().add(Ĉ);
+        }
 
         Pair<OWLClassExpression, Pair<HashSet<OWLObject>, HashSet<OWLObject>>> ret = new Pair<>(Ĉ, KB);
 

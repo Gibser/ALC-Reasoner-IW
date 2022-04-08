@@ -16,8 +16,13 @@ import org.semanticweb.owlapi.model.OWLObjectUnionOf;
 import org.semanticweb.owlapi.model.OWLObjectVisitor;
 import org.semanticweb.owlapi.model.OWLSubClassOfAxiom;
 
-// Visita un assioma e, appena trova un or, verifica se tra i disgiunti c'è un T (come A or not(A))
-
+/**
+    OWLObjectVisitor che visita un assioma e, appena trova un or, verifica se tra i disgiunti c'è un TOP (come A or not(A))
+    oppure, appena trova un and, verifica se tra i congiunti c'è un BOTTOM (come A and not(A)).
+    Ricostruisce ricorsivamente il nuovo assioma inserendo i vecchi assiomi se non cambiati
+    oppure, nel caso di AND o OR, restituisce il nuovo assioma senza i BOTTOM (per gli or) e i TOP (per gli and)
+    o direttamente TOP (se c'è un TOP in un or) o BOTTOM (se c'è un BOTTOM in un and)
+*/
 public class OrAndPreprocessorVisitor implements OWLObjectVisitor{
 
     OWLClassExpression ret_expr = null;

@@ -9,6 +9,9 @@ import org.semanticweb.owlapi.model.OWLEquivalentClassesAxiom;
 import org.semanticweb.owlapi.model.OWLObject;
 import org.semanticweb.owlapi.model.OWLObjectIntersectionOf;
 
+/**
+    OWLObjectVisitor utilizzato per applicare la regola dell'AND nell'algoritmo del tableau
+*/
 public class AndVisitor implements OWLObjectVisitor{
 
     HashSet<OWLObject> rule_set = new HashSet<OWLObject>();

@@ -9,6 +9,9 @@ import org.semanticweb.owlapi.model.OWLEquivalentClassesAxiom;
 import org.semanticweb.owlapi.model.OWLObject;
 import org.semanticweb.owlapi.model.OWLObjectUnionOf;
 
+/**
+    OWLObjectVisitor utilizzato per applicare la regola dell'OR nell'algoritmo del tableau
+ */
 public class OrVisitor implements OWLObjectVisitor{
 
     HashSet<OWLObject> rule_set = new HashSet<OWLObject>();
