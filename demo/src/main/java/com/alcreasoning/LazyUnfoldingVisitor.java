@@ -14,6 +14,7 @@ public class LazyUnfoldingVisitor implements OWLObjectVisitor{
     public void visit(OWLEquivalentClassesAxiom eq){
         this.left_side = (OWLClass) eq.getOperandsAsList().get(0);
         this.right_side = eq.getOperandsAsList().get(1);
+
     }
 
     public void visit(OWLSubClassOfAxiom eq){

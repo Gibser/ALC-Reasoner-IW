@@ -18,13 +18,17 @@ Declaration(ObjectProperty(:R))
 #   Classes
 ############################
 
+# Class: :A (:A)
+
+EquivalentClasses(:A ObjectSomeValuesFrom(:R ObjectIntersectionOf(:B ObjectUnionOf(:A ObjectComplementOf(:A)))))
+
 # Class: :C (:C)
 
 EquivalentClasses(:C ObjectIntersectionOf(ObjectUnionOf(:A :B) ObjectUnionOf(:A ObjectUnionOf(:B ObjectComplementOf(:B))) ObjectUnionOf(ObjectComplementOf(:A) ObjectComplementOf(:B)) ObjectComplementOf(:A)))
 
 # Class: :K (:K)
 
-EquivalentClasses(:K ObjectSomeValuesFrom(:R ObjectIntersectionOf(:B ObjectUnionOf(:A ObjectComplementOf(:A)))))
+EquivalentClasses(:K ObjectIntersectionOf(ObjectUnionOf(:B :K) ObjectComplementOf(:A)))
 
 
 )

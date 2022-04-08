@@ -181,6 +181,10 @@ public class OntologyPreprocessor {
             conjunction = this.factory.getOWLObjectIntersectionOf(preprocessed_tbox);
         else if(preprocessed_tbox.size() == 1)
             conjunction = preprocessed_tbox.iterator().next();
+        
+        System.out.println("\n");
+        conjunction.accept(this.v);
+        System.out.println("\n");
         return conjunction;
     }
 
