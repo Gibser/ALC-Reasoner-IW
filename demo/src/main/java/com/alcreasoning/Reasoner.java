@@ -1,26 +1,26 @@
 package com.alcreasoning;
 import java.util.HashSet;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
-import org.semanticweb.owlapi.metrics.GCICount;
+import org.apache.jena.rdf.model.Model;
+import org.apache.jena.rdf.model.ModelFactory;
 import org.semanticweb.owlapi.model.IRI;
 import org.semanticweb.owlapi.model.OWLClass;
 import org.semanticweb.owlapi.model.OWLClassAssertionAxiom;
 import org.semanticweb.owlapi.model.OWLClassExpression;
 import org.semanticweb.owlapi.model.OWLDataFactory;
 import org.semanticweb.owlapi.model.OWLEquivalentClassesAxiom;
-import org.semanticweb.owlapi.model.OWLIndividual;
 import org.semanticweb.owlapi.model.OWLLogicalAxiom;
 import org.semanticweb.owlapi.model.OWLNamedIndividual;
 import org.semanticweb.owlapi.model.OWLObject;
 import org.semanticweb.owlapi.model.OWLObjectAllValuesFrom;
 import org.semanticweb.owlapi.model.OWLObjectComplementOf;
-import org.semanticweb.owlapi.model.OWLObjectIntersectionOf;
 import org.semanticweb.owlapi.model.OWLObjectPropertyAssertionAxiom;
 import org.semanticweb.owlapi.model.OWLObjectPropertyExpression;
 import org.semanticweb.owlapi.model.OWLObjectSomeValuesFrom;
 
+import guru.nidi.graphviz.model.MutableGraph;
+import static guru.nidi.graphviz.model.Factory.*;
 
 public class Reasoner {
 
@@ -36,13 +36,18 @@ public class Reasoner {
     private OWLClassExpression Ĉ = null;
     private OWLNamedIndividual root;
     LazyUnfoldingVisitor lazy_unfolding_v;
+    Model graph;
+    //MutableGraph graph;
 
+    
     private Reasoner(IRI ontology_iri){
         this.factory = OntologyPreprocessor.concept_man.getOWLDataFactory();
         this.ontology_iri = ontology_iri;
         this.or_visitor = new AndVisitor();
         this.and_visitor = new OrVisitor();
         this.v = new FunnyVisitor();
+        //this.graph = mutGraph("Tableau").setDirected(true);
+        this.graph = ModelFactory.createDefaultModel();
     }
 
     public Reasoner(OWLClassExpression concept_name, OWLClassExpression concept, IRI ontology_iri){
@@ -289,8 +294,10 @@ public class Reasoner {
         L_x.addAll(or_visitor.get_rule_set());
 
         // Blocking
-        if(this.blocking(L_parent, L_x))
+        if(this.blocking(L_parent, L_x)){
+            System.out.println("Blocking");
             return true;
+        }
 
 
         added_joint = this.addall_axiom_to_abox(or_visitor.get_rule_set_and_reset(), x);
