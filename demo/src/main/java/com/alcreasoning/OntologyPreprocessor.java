@@ -81,10 +81,10 @@ public class OntologyPreprocessor {
         return this.tbox.getOntologyID().getOntologyIRI().get();
     }
 
-    private OWLObjectUnionOf preprocess_subclassof(OWLSubClassOfAxiom subclassof){
+    private OWLClassExpression preprocess_subclassof(OWLSubClassOfAxiom subclassof){
         OWLClassExpression not_a = this.factory.getOWLObjectComplementOf(subclassof.getSubClass()).getNNF();
         OWLClassExpression b = subclassof.getSuperClass();
-        ArrayList<OWLClassExpression> operands = new ArrayList<>();
+        HashSet<OWLClassExpression> operands = new HashSet<>();
         
         if(not_a instanceof OWLObjectUnionOf)
             operands.addAll(((OWLObjectUnionOf)not_a).getOperandsAsList());
@@ -97,13 +97,17 @@ public class OntologyPreprocessor {
         else
             operands.add(b);
         
-        OWLObjectUnionOf preprocess_subclass = this.factory.getOWLObjectUnionOf(operands);
-
+        OWLClassExpression preprocess_subclass;
+        if(operands.size() > 1)
+            preprocess_subclass = this.factory.getOWLObjectUnionOf(operands);
+        else
+            preprocess_subclass = operands.iterator().next();
+            
         return preprocess_subclass; 
     }
 
-    private ArrayList<OWLObjectUnionOf> preprocess_equivalence(OWLEquivalentClassesAxiom equivalence){
-        ArrayList<OWLObjectUnionOf> preprocessed_equivalence = new ArrayList<>();
+    private ArrayList<OWLClassExpression> preprocess_equivalence(OWLEquivalentClassesAxiom equivalence){
+        ArrayList<OWLClassExpression> preprocessed_equivalence = new ArrayList<>();
 
         OWLClassExpression a = equivalence.getOperandsAsList().get(0);
         OWLClassExpression b = equivalence.getOperandsAsList().get(1);
