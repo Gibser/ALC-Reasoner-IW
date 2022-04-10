@@ -219,9 +219,11 @@ public class Reasoner {
             }
             // Se ho trovato un ramo clash free, posso interrompere l'iterazione e ritornare true
             // altrimenti si procede con l'iterazione
+            /*
             if(clash_free){
                 return true;
             }
+            */
         }
         // Controllo se localmente ci sono clash
         if(!(clash_free = this.check_not_clash(L_x))){
@@ -356,9 +358,11 @@ public class Reasoner {
             }
             // Se ho trovato un ramo clash free, posso interrompere l'iterazione e ritornare true
             // altrimenti si procede con l'iterazione
+            /*
             if(clash_free){
                 return true;
             }
+            */
         }
         // Controllo se localmente ci sono clash
         if(!(clash_free = this.check_not_clash(L_x))){
@@ -398,13 +402,18 @@ public class Reasoner {
                 this.add_axiom_to_abox(this.Ĉ, child);                                                                  // Si aggiunge Ĉ(child) all'ABox
                 L_child.add(filler);                                                                                    
                 L_child.add(this.Ĉ);                                                                                    // L(x') = {C, Ĉ}
+                
+                // Vanno aggiunti anche gli assiomi dell'esiste perché vanno rimossi se il figlio non è clash free
+                added_axioms.add(this.instantiate_axiom(filler, child));
+                added_axioms.add(this.factory.getOWLObjectPropertyAssertionAxiom(property, x, child));
+                added_axioms.add(this.instantiate_axiom(this.Ĉ, child));
 
                 owl_all_values_set.stream()                                                                                      // forall R.D
                     .filter(e -> e.getProperty().equals(property))                                                      // Filtra i per ogni con la stessa relazione R
                     .forEach(e -> {
                                     L_child.add(e.getFiller());
-                                    if(this.add_axiom_to_abox(e.getFiller(), x)) 
-                                        added_axioms.add(this.instantiate_axiom(e.getFiller(), x));
+                                    if(this.add_axiom_to_abox(e.getFiller(), child))                                    // cambiato x a child, va istanziato per il figlio, non per x
+                                        added_axioms.add(this.instantiate_axiom(e.getFiller(), child));                 // cambiato x a child
                                   });
 
                 clash_free = tableau_algorithm_non_empty_tbox(child, L_x, L_child, this.node_index);
@@ -525,9 +534,11 @@ public class Reasoner {
             }
             // Se ho trovato un ramo clash free, posso interrompere l'iterazione e ritornare true
             // altrimenti si procede con l'iterazione
+            /*
             if(clash_free){
                 return true;
             }
+            */
         }
         // Controllo se localmente ci sono clash
         if(!(clash_free = this.check_not_clash(L_x))){
@@ -570,12 +581,17 @@ public class Reasoner {
                 L_child.add(filler);                                                                                    
                 L_child.add(this.Ĉ);                                                                                    // L(x') = {C, Ĉ}
 
+                // Vanno aggiunti anche gli assiomi dell'esiste perché vanno rimossi se il figlio non è clash free
+                added_axioms.add(this.instantiate_axiom(filler, child));
+                added_axioms.add(this.factory.getOWLObjectPropertyAssertionAxiom(property, x, child));
+                added_axioms.add(this.instantiate_axiom(this.Ĉ, child));
+                
                 owl_all_values_set.stream()                                                                                      // forall R.D
                     .filter(e -> e.getProperty().equals(property))                                                      // Filtra i per ogni con la stessa relazione R
                     .forEach(e -> {
                                     L_child.add(e.getFiller());
-                                    if(this.add_axiom_to_abox(e.getFiller(), x)) 
-                                        added_axioms.add(this.instantiate_axiom(e.getFiller(), x));
+                                    if(this.add_axiom_to_abox(e.getFiller(), child)) 
+                                        added_axioms.add(this.instantiate_axiom(e.getFiller(), child));
                                   });
 
                 clash_free = tableau_algorithm_non_empty_tbox_lazy_unfolding(child, L_x, L_child, this.node_index);
