@@ -45,6 +45,7 @@ public final class App {
      * @param args The arguments of the program.
      */
     public static void main(String[] args) {
+        /*
         // some definitions
         String personURI    = "http://somewhere/JohnSmith";
         String fullName     = "John Smith";
@@ -60,15 +61,16 @@ public final class App {
         
         model.write(System.out);
 
+        */
         /*
         // Graphviz
         MutableNode node = mutNode("x0").add((Label.of("L_x").external()));
         MutableGraph g = mutGraph("example1").setDirected(true);//.add(mutNode("a").add(Color.RED).add((Label.of("Alleikum").external())).addLink(mutNode("b")));
         //g.add(node.addLink());// .add((Label.of("L_x").external())));
-        g.add(node.addLink(to(mutNode("x1")).with(Label.of("R"))));
+        g.add(node.addLink(to(mutNode(" ").add(Label.of("x0"))).with(Label.of("R"))));
         g.add(node.addLink(to(mutNode("x1")).with(Label.of("R"))));
         try{
-            Graphviz.fromGraph(g).width(200).render(Format.PNG).toFile(new File("example/ex1i.png"));
+            Graphviz.fromGraph(g).width(200).render(Format.PNG).toFile(new File("./ProgettoIW/ex1i.png"));
         }
         catch(IOException ex){
             System.out.println("ALKASJHASDF");
@@ -76,7 +78,7 @@ public final class App {
         */
         // Implementare input C da prompt o campo testo
         // quindi va costruita con il data factory
-        OntologyPreprocessor preproc = new OntologyPreprocessor("H:\\Università\\Progetto IW\\concept_1.owl", "H:\\Università\\Progetto IW\\prova_atomic_concepts.owl");
+        OntologyPreprocessor preproc = new OntologyPreprocessor("ProgettoIW/concept_1.owl", "ProgettoIW/KB1.owl");
         System.out.println("\n\n\nLogical Axioms:\n");
         ///////nord
         FunnyVisitor v = new FunnyVisitor();
@@ -111,9 +113,9 @@ public final class App {
         System.out.println("}");
         //Pair<OWLClassExpression, Pair<HashSet<OWLObject>, HashSet<OWLObject>>> KB_and_Ĉ = preproc.preprocess_tbox_and_concept(partition.getKey());
         Pair<OWLClassExpression, Pair<HashSet<OWLObject>, HashSet<OWLObject>>> KB_and_Ĉ = preproc.preprocess_tbox_and_concept();
-        Reasoner r = new Reasoner(KB_and_Ĉ.getKey(), KB_and_Ĉ.getValue().getKey(), KB_and_Ĉ.getValue().getValue(), preproc.get_tbox_ontology_IRI());
+        Reasoner r = new Reasoner(KB_and_Ĉ.getKey(), KB_and_Ĉ.getValue().getKey(), KB_and_Ĉ.getValue().getValue(), preproc.get_tbox_ontology_IRI(), true);
         Instant start = Instant.now();
-        System.out.println(r.check_consistency());
+        System.out.println(r.check_consistency("./ProgettoIW/graphs/tableaux.svg"));
         Instant end = Instant.now();
         System.out.println("\nElapsed Time: "+ Duration.between(start, end).toMillis()+"ms");
     }

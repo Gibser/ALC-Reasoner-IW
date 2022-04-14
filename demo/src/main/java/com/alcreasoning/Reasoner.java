@@ -1,4 +1,6 @@
 package com.alcreasoning;
+import java.io.File;
+import java.io.IOException;
 import java.util.HashSet;
 import java.util.stream.Collectors;
 
@@ -21,14 +23,22 @@ import org.semanticweb.owlapi.model.OWLObjectSomeValuesFrom;
 import org.semanticweb.owlapi.model.OWLObjectUnionOf;
 import org.semanticweb.owlapi.model.OWLPropertyAssertionAxiom;
 
+import guru.nidi.graphviz.attribute.Label;
+import guru.nidi.graphviz.attribute.Label.Justification;
+import guru.nidi.graphviz.engine.Format;
+import guru.nidi.graphviz.engine.Graphviz;
 import guru.nidi.graphviz.model.MutableGraph;
+import guru.nidi.graphviz.model.MutableNode;
+
 import static guru.nidi.graphviz.model.Factory.*;
 
 public class Reasoner {
 
+    
     private AndVisitor or_visitor;
     private OrVisitor and_visitor;
     private FunnyVisitor v;
+    private FunnyVisitor return_visitor;
     private OWLDataFactory factory;
     HashSet<OWLObject> abox = new HashSet<OWLObject>();
     HashSet<OWLObject> L_x = new HashSet<OWLObject>();
@@ -38,37 +48,40 @@ public class Reasoner {
     private OWLClassExpression Ĉ = null;
     private OWLNamedIndividual root;
     LazyUnfoldingVisitor lazy_unfolding_v;
-    Model graph;
+    //Model graph;
     //MutableGraph graph;
+    GraphDrawer graph_drawer;
+    boolean draw_graph;
 
-    
-    private Reasoner(IRI ontology_iri){
+    private Reasoner(IRI ontology_iri, boolean draw_graph){
         this.factory = OntologyPreprocessor.concept_man.getOWLDataFactory();
         this.ontology_iri = ontology_iri;
         this.or_visitor = new AndVisitor();
         this.and_visitor = new OrVisitor();
         this.v = new FunnyVisitor();
-        //this.graph = mutGraph("Tableau").setDirected(true);
-        this.graph = ModelFactory.createDefaultModel();
+        this.return_visitor = new FunnyVisitor(true);
+        this.graph_drawer = new GraphDrawer("ALC Tableaux");
+        this.draw_graph = draw_graph;
+        //this.graph = ModelFactory.createDefaultModel();
     }
 
-    public Reasoner(OWLClassExpression concept_name, OWLClassExpression concept, IRI ontology_iri){
-        this(ontology_iri);
+    public Reasoner(OWLClassExpression concept_name, OWLClassExpression concept, IRI ontology_iri, boolean draw_graph){
+        this(ontology_iri, draw_graph);
         this.L_x.add(concept);
         this.root = this.create_individual();
         this.add_axiom_to_abox(concept_name, root);
     }
 
-    public Reasoner(OWLClassExpression Ĉ, HashSet<OWLObject> KB_with_concept_name, HashSet<OWLObject> KB_with_concept, IRI ontology_iri){
-        this(ontology_iri);
+    public Reasoner(OWLClassExpression Ĉ, HashSet<OWLObject> KB_with_concept_name, HashSet<OWLObject> KB_with_concept, IRI ontology_iri, boolean draw_graph){
+        this(ontology_iri, draw_graph);
         this.L_x.addAll(KB_with_concept);
         this.root = this.create_individual();
         this.addall_axiom_to_abox(KB_with_concept_name, root);
         this.Ĉ = Ĉ;
     }
 
-    public Reasoner(OWLClassExpression T_g, HashSet<OWLLogicalAxiom> T_u, HashSet<OWLObject> KB_with_concept_name, HashSet<OWLObject> KB_with_concept, IRI ontology_iri){
-        this(ontology_iri);
+    public Reasoner(OWLClassExpression T_g, HashSet<OWLLogicalAxiom> T_u, HashSet<OWLObject> KB_with_concept_name, HashSet<OWLObject> KB_with_concept, IRI ontology_iri, boolean draw_graph){
+        this(ontology_iri, draw_graph);
         this.L_x.addAll(KB_with_concept);
         this.root = this.create_individual();
         this.addall_axiom_to_abox(KB_with_concept_name, root);
@@ -101,7 +114,7 @@ public class Reasoner {
         }   
 
         return true;
-    }
+    } 
 
     private void print_L_x(HashSet<OWLObject> L_x){
         int i = 0;
@@ -110,6 +123,18 @@ public class Reasoner {
             obj.accept(this.v);
             if(i++ < L_x.size()-1) System.out.print(", "); else System.out.print("}\n");
         }
+    }
+
+    private String return_set_as_string(HashSet<OWLObject> L_x, String set_name){
+        String ret_string = set_name + " = {";
+        int i = 0;
+        for(OWLObject obj : L_x){
+            obj.accept(this.return_visitor);
+            ret_string += this.return_visitor.get_and_destroy_return_string();
+            if(i++ < L_x.size()-1) ret_string += ", "; else ret_string += "}";
+        }
+
+        return ret_string;
     }
 
     private void print_L_x_temp(HashSet<OWLObject> L_x_temp){
@@ -168,6 +193,8 @@ public class Reasoner {
     private OWLObjectPropertyAssertionAxiom instantiate_property_axiom(OWLObjectPropertyExpression relation, OWLNamedIndividual x1, OWLNamedIndividual x2){
         return this.factory.getOWLObjectPropertyAssertionAxiom(relation, x1, x2);
     }
+
+    
 
     public boolean tableau_algorithm(OWLNamedIndividual x, HashSet<OWLObject> L_x, int node_index){
         HashSet<OWLClassExpression> disjointed;
@@ -315,13 +342,28 @@ public class Reasoner {
         return clash_free;
     }
 
-    public boolean tableau_algorithm_non_empty_tbox(OWLNamedIndividual x, HashSet<OWLObject> L_parent, HashSet<OWLObject> L_x, int node_index){
+    private MutableNode update_graph(boolean or_branch, MutableNode node, String individual_name, OWLObjectPropertyExpression property){
+        MutableNode child_node = null;
+        if(this.draw_graph){
+            if(or_branch)
+                child_node = this.graph_drawer.add_new_child(node, "" + FunnyVisitor.union, L_x, individual_name);
+            else{
+                property.accept(this.return_visitor);
+                child_node = this.graph_drawer.add_new_child(node, this.return_visitor.get_return_string(), L_x, individual_name);
+            }
+        }
+
+        return child_node;
+    }
+
+    public boolean tableau_algorithm_non_empty_tbox(OWLNamedIndividual x, HashSet<OWLObject> L_parent, HashSet<OWLObject> L_x, int node_index, MutableNode node){
         HashSet<OWLClassExpression> disjointed;
         HashSet<OWLObjectSomeValuesFrom> owl_some_values_set;
         HashSet<OWLObjectAllValuesFrom> owl_all_values_set;
         HashSet<OWLObject> added_joint;  // ;)
+        String L_x_string;
         boolean clash_free = false;
-
+        
         for(OWLObject obj : L_x){
             obj.accept(or_visitor);
         }
@@ -394,7 +436,10 @@ public class Reasoner {
                     System.out.println();
                     ////
                     
-                    clash_free = tableau_algorithm_non_empty_tbox(x, null, L_x, node_index);
+                    // Grafo
+                    MutableNode child_node = this.update_graph(true, node, x.getIRI().getShortForm(), null);
+
+                    clash_free = tableau_algorithm_non_empty_tbox(x, null, L_x, node_index, child_node);
                     if(clash_free){
                         System.out.println("Trovato true");
                         break;
@@ -477,8 +522,11 @@ public class Reasoner {
                                     if(this.add_axiom_to_abox(e.getFiller(), child))                                    // cambiato x a child, va istanziato per il figlio, non per x
                                         added_axioms.add(this.instantiate_axiom(e.getFiller(), child));                 // cambiato x a child
                                   });
+                
+                // Grafo
+                MutableNode child_node = this.update_graph(false, node, x.getIRI().getShortForm(), property);
 
-                clash_free = tableau_algorithm_non_empty_tbox(child, L_x, L_child, this.node_index);
+                clash_free = tableau_algorithm_non_empty_tbox(child, L_x, L_child, this.node_index, child_node);
 
                 if(!clash_free){
                     this.removeall_axiom_from_abox(added_axioms);
@@ -686,18 +734,25 @@ public class Reasoner {
     }
 
 
-    public boolean check_consistency(){
+    public boolean check_consistency(String save_path){
+        File dir = new File("./ProgettoIW/labels");
+        if(!dir.exists())
+            dir.mkdir();
+        MutableNode root = mutNode("x_0");
         boolean clash_free;
         if(this.Ĉ == null)
             clash_free = this.tableau_algorithm(this.root, this.L_x, this.node_index);
         else{
             System.out.println("Senza lazy unfolding:");
-            clash_free = this.tableau_algorithm_non_empty_tbox(this.root, null, this.L_x, this.node_index);
+            clash_free = this.tableau_algorithm_non_empty_tbox(this.root, null, this.L_x, this.node_index, root);
         }
+        if(this.draw_graph)
+            this.graph_drawer.save_graph(save_path);
         return clash_free;
     }
 
     public boolean check_consistency_lazy_unfolding(){
+        MutableNode root = mutNode("x_0");
         boolean clash_free;
         if(this.Ĉ == null)
             clash_free = this.tableau_algorithm(this.root, this.L_x, this.node_index);

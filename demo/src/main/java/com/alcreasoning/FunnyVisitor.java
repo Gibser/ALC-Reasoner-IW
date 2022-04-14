@@ -3,6 +3,8 @@ package com.alcreasoning;
 import org.semanticweb.owlapi.model.OWLObjectVisitor;
 import org.semanticweb.owlapi.model.OWLSubClassOfAxiom;
 
+import java.io.PrintStream;
+import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -31,18 +33,30 @@ public class FunnyVisitor implements OWLObjectVisitor{
     
     private String regexp_for_names;
     private Pattern r;
-    private boolean save_string;
+    private boolean save_string = false;
     private String return_string;
+    private PrintStream out;
+    static final char intersect = '\u2293';
+	static final char union = '\u2294';
+	static final char foreach = '\u2200';
+	static final char exists = '\u2203';
+	static final char not = '\u00AC';
+	static final char inclusion = '\u2291';
+    static final char equiv = '\u2261';
 
     public FunnyVisitor(){
         regexp_for_names = "[^#]*#([a-zA-Z0-9_-]+)>$";
         r = Pattern.compile(regexp_for_names);
-        this.save_string = false;
+        try{
+            this.out = new PrintStream(System.out, true, "UTF-8");
+        }
+        catch(UnsupportedEncodingException e){
+            System.out.println("Error");
+        }
     }
 
     public FunnyVisitor(boolean save_string){
-        regexp_for_names = "[^#]*#([a-zA-Z0-9_-]+)>$";
-        r = Pattern.compile(regexp_for_names);
+        this();
         this.save_string = save_string;
         this.return_string = "";
     }
@@ -51,23 +65,38 @@ public class FunnyVisitor implements OWLObjectVisitor{
         if(this.save_string)
             this.return_string += text;
         else
-            System.out.print(text);
+            this.out.print(text);
+    }
+
+    private void process_output(boolean print, char text){
+        if(this.save_string)
+            this.return_string += text;
+        else
+            this.out.print(text);
     }
 
     public String get_return_string(){
         return this.return_string;
     }
 
+    public String get_and_destroy_return_string(){
+        String tmp = new String(this.return_string);
+        this.return_string = "";
+        return tmp;
+    }
+
     public void visit(OWLEquivalentClassesAxiom ax) {
         List<OWLClassExpression> expr_list = ax.getOperandsAsList();
         expr_list.get(0).accept(this);
-        this.process_output(this.save_string, " equiv ");
+        this.process_output(this.save_string, " ");
+        this.process_output(this.save_string, this.equiv);
+        this.process_output(this.save_string, " ");
         expr_list.get(1).accept(this);             
     }
 
     public void visit(OWLObjectSomeValuesFrom ce) {
         OWLObjectPropertyExpression p = ce.getProperty();
-        this.process_output(this.save_string, "exists ");
+        this.process_output(this.save_string, this.exists);
         Matcher m = r.matcher(p.toString());
         if(m.find()){
             this.process_output(this.save_string, m.group(1) + ".");
@@ -76,9 +105,10 @@ public class FunnyVisitor implements OWLObjectVisitor{
     }
 
     public void visit(OWLObjectComplementOf ce) {
-        this.process_output(this.save_string, "not(");
+        this.process_output(this.save_string, this.not);
+        //this.process_output(this.save_string, "(");
         ce.getOperand().accept(this);
-        this.process_output(this.save_string, ")");
+        //this.process_output(this.save_string, ")");
     }
 
     public void visit(OWLClass class_expr) {
@@ -98,7 +128,9 @@ public class FunnyVisitor implements OWLObjectVisitor{
         for(OWLClassExpression c : intersection.getOperands()){
             c.accept(this);
             if(++i < list_len){
-                this.process_output(this.save_string, " and ");
+                this.process_output(this.save_string, " ");
+                this.process_output(this.save_string, this.intersect);
+                this.process_output(this.save_string, " ");
             }
         }
         this.process_output(this.save_string, ")");
@@ -110,7 +142,9 @@ public class FunnyVisitor implements OWLObjectVisitor{
         for(OWLClassExpression c : union.getOperands()){
             c.accept(this);
             if(++i < list_len){
-                this.process_output(this.save_string, " or ");
+                this.process_output(this.save_string, " ");
+                this.process_output(this.save_string, this.union);
+                this.process_output(this.save_string, " ");
             }
         }
         this.process_output(this.save_string, ")");
@@ -118,7 +152,7 @@ public class FunnyVisitor implements OWLObjectVisitor{
 
     public void visit(OWLObjectAllValuesFrom ce) {
         OWLObjectPropertyExpression p = ce.getProperty();
-        this.process_output(this.save_string, "for all ");
+        this.process_output(this.save_string, this.foreach);
         Matcher m = r.matcher(p.toString());
         if (m.find()) {
             this.process_output(this.save_string, m.group(1) + ".");
@@ -158,7 +192,7 @@ public class FunnyVisitor implements OWLObjectVisitor{
 
     public void visit(OWLSubClassOfAxiom subclass){
         subclass.getSubClass().accept(this);
-        this.process_output(this.save_string, " subclass of ");
+        this.process_output(this.save_string, this.inclusion);
         subclass.getSuperClass().accept(this);
     }
 }
