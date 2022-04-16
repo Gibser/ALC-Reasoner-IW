@@ -1,0 +1,55 @@
+<svg width="684px" height="233px"
+ viewBox="0.00 0.00 684.00 233.00" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+<g id="graph0" class="graph" transform="scale(1.0 1.0) rotate(0.0) translate(4.0 229.0)">
+<title>ALC Tableaux</title>
+<polygon fill="white" stroke="transparent" points="-4,4 -4,-229 680,-229 680,4 -4,4"/>
+<!-- 0 -->
+<g id="node1" class="node">
+<title>0</title>
+<ellipse fill="none" stroke="black" cx="613" cy="-120" rx="27" ry="18"/>
+<text text-anchor="middle" x="613" y="-116.3" font-family="Times New Roman,serif" font-size="14.00">x_0</text>
+<text text-anchor="start" x="36" y="-141.8" font-family="Times New Roman,serif" font-size="14.00">href=&quot;file:///C:\Users\gpepp\Desktop\Universita\Magistrale\Intelligent Web\ProgettoIW\labels\0_12</text>
+</g>
+<!-- 1 -->
+<g id="node2" class="node">
+<title>1</title>
+<ellipse fill="none" stroke="black" cx="577" cy="-33" rx="27" ry="18"/>
+<text text-anchor="middle" x="577" y="-29.3" font-family="Times New Roman,serif" font-size="14.00">x_0</text>
+<text text-anchor="start" x="0" y="-54.8" font-family="Times New Roman,serif" font-size="14.00">href=&quot;file:///C:\Users\gpepp\Desktop\Universita\Magistrale\Intelligent Web\ProgettoIW\labels\1_12</text>
+</g>
+<!-- 0&#45;&gt;1 -->
+<g id="edge2" class="edge">
+<title>0&#45;&gt;1</title>
+<path fill="none" stroke="black" d="M605.89,-102.21C600.78,-90.14 593.79,-73.64 587.97,-59.89"/>
+<polygon fill="black" stroke="black" points="591.1,-58.31 583.98,-50.47 584.65,-61.04 591.1,-58.31"/>
+<text text-anchor="middle" x="607" y="-72.8" font-family="Times New Roman,serif" font-size="14.00">⊔</text>
+</g>
+<!-- 2 -->
+<g id="node3" class="node">
+<title>2</title>
+<ellipse fill="none" stroke="black" cx="649" cy="-33" rx="27" ry="18"/>
+<text text-anchor="middle" x="649" y="-29.3" font-family="Times New Roman,serif" font-size="14.00">x_0</text>
+<text text-anchor="start" x="72" y="-3.8" font-family="Times New Roman,serif" font-size="14.00">href=&quot;file:///C:\Users\gpepp\Desktop\Universita\Magistrale\Intelligent Web\ProgettoIW\labels\2_12</text>
+</g>
+<!-- 0&#45;&gt;2 -->
+<g id="edge3" class="edge">
+<title>0&#45;&gt;2</title>
+<path fill="none" stroke="black" d="M620.11,-102.21C625.22,-90.14 632.21,-73.64 638.03,-59.89"/>
+<polygon fill="black" stroke="black" points="641.35,-61.04 642.02,-50.47 634.9,-58.31 641.35,-61.04"/>
+<text text-anchor="middle" x="642" y="-72.8" font-family="Times New Roman,serif" font-size="14.00">⊔</text>
+</g>
+<!-- x_0 -->
+<g id="node4" class="node">
+<title>x_0</title>
+<ellipse fill="none" stroke="black" cx="613" cy="-207" rx="27" ry="18"/>
+<text text-anchor="middle" x="613" y="-203.3" font-family="Times New Roman,serif" font-size="14.00">x_0</text>
+</g>
+<!-- x_0&#45;&gt;0 -->
+<g id="edge1" class="edge">
+<title>x_0&#45;&gt;0</title>
+<path fill="none" stroke="black" d="M613,-188.8C613,-177.16 613,-161.55 613,-148.24"/>
+<polygon fill="black" stroke="black" points="616.5,-148.18 613,-138.18 609.5,-148.18 616.5,-148.18"/>
+<text text-anchor="middle" x="622" y="-159.8" font-family="Times New Roman,serif" font-size="14.00">⊔</text>
+</g>
+</g>
+</svg>

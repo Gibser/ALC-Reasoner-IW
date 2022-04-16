@@ -32,7 +32,7 @@ public class GraphDrawer {
 
     private String write_L_x_to_file(HashSet<OWLObject> L_x, String individual_name){
         String L_x_string = this.return_set_as_string(L_x, "L_" + individual_name);
-        String folder = "./ProgettoIW/labels/";
+        String folder = "labels\\";
         String filename = "" + this.graphviz_node_id;
         int duplicate_index = 1;
         Path path = Paths.get(folder + filename);
@@ -62,7 +62,8 @@ public class GraphDrawer {
     private MutableNode create_new_node(HashSet<OWLObject> L_x, String individual_name){
         //String L_x_string = this.return_set_as_string(L_x, "L_"+individual_name);
         String file_path = this.write_L_x_to_file(L_x, individual_name);
-        String html = "<a href=\"" + file_path + "\">L_" + individual_name + "</a>";
+        //String html = "<a href=\"file:///" + System.getProperty("user.dir") + "\\" + file_path + "\">L_" + individual_name + "</a>";
+        String html = "href=\"file:///" + System.getProperty("user.dir") + "\\" + file_path + "\"";
         System.out.println(html);
         MutableNode child_node = mutNode("" + this.graphviz_node_id++).add(Label.of(individual_name)).add(Label.html(html).external());
         return child_node;
