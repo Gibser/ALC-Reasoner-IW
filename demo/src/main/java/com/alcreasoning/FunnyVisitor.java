@@ -87,11 +87,15 @@ public class FunnyVisitor implements OWLObjectVisitor{
 
     public void visit(OWLEquivalentClassesAxiom ax) {
         List<OWLClassExpression> expr_list = ax.getOperandsAsList();
-        expr_list.get(0).accept(this);
-        this.process_output(this.save_string, " ");
-        this.process_output(this.save_string, this.equiv);
-        this.process_output(this.save_string, " ");
-        expr_list.get(1).accept(this);             
+        int i = 0;
+        for(OWLClassExpression operand : expr_list){
+            operand.accept(this);
+            if(i++ < expr_list.size()-1){
+                this.process_output(this.save_string, " ");
+                this.process_output(this.save_string, this.equiv);
+                this.process_output(this.save_string, " ");
+            }
+        }           
     }
 
     public void visit(OWLObjectSomeValuesFrom ce) {

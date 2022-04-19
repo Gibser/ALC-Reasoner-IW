@@ -52,6 +52,8 @@ public class Reasoner {
     //Model graph;
     //MutableGraph graph;
     GraphDrawer graph_drawer;
+    Node last_parent;
+    Node last_child;
     boolean draw_graph;
 
     private Reasoner(IRI ontology_iri, boolean draw_graph){
@@ -350,19 +352,18 @@ public class Reasoner {
                 child_node = this.graph_drawer.add_new_child(node, "" + FunnyVisitor.union, individual_name);
             else{
                 property.accept(this.return_visitor);
-                child_node = this.graph_drawer.add_new_child(node, this.return_visitor.get_return_string(), individual_name);
+                child_node = this.graph_drawer.add_new_child(node, this.return_visitor.get_and_destroy_return_string(), individual_name);
             }
         }
 
         return child_node;
     }
 
-    public boolean tableau_algorithm_non_empty_tbox(OWLNamedIndividual x, HashSet<OWLObject> L_parent, HashSet<OWLObject> L_x, int node_index, Node node){
+    public boolean tableau_algorithm_non_empty_tbox(OWLNamedIndividual x, HashSet<OWLObject> L_parent, HashSet<OWLObject> L_x, Node node){
         HashSet<OWLClassExpression> disjointed;
         HashSet<OWLObjectSomeValuesFrom> owl_some_values_set;
         HashSet<OWLObjectAllValuesFrom> owl_all_values_set;
         HashSet<OWLObject> added_joint;  // ;)
-        String L_x_string;
         boolean clash_free = false;
         
         for(OWLObject obj : L_x){
@@ -443,8 +444,9 @@ public class Reasoner {
                     // Grafo
                     Node child_node = this.update_graph(true, node, x.getIRI().getShortForm(), null);
 
-                    clash_free = tableau_algorithm_non_empty_tbox(x, null, L_x, node_index, child_node);
+                    clash_free = tableau_algorithm_non_empty_tbox(x, null, L_x, child_node);
                     if(clash_free){
+                        this.last_parent = child_node;
                         System.out.println("Trovato true");
                         break;
                     }
@@ -529,20 +531,25 @@ public class Reasoner {
                                   });
                 
                 // Grafo
-                Node child_node = this.update_graph(false, node, x.getIRI().getShortForm(), property);
+                Node child_node = this.update_graph(false, node, child.getIRI().getShortForm(), property);
 
-                clash_free = tableau_algorithm_non_empty_tbox(child, L_x, L_child, this.node_index, child_node);
+                clash_free = tableau_algorithm_non_empty_tbox(child, L_x, L_child, child_node);
 
                 if(!clash_free){
                     this.removeall_axiom_from_abox(added_axioms);
                     break;
                 }
+                
+                else{
+                    this.last_child = child_node;
+                    node = this.last_parent;
+                }
             }
         }
-        System.out.println("Fine chiamata nodo x_" + node_index);
+        System.out.println("Fine chiamata nodo " + x.getIRI().getShortForm());
         System.out.println("Clash free: " + clash_free);
         // Grafo
-        if(clash_free)
+        if(clash_free && owl_some_values_set.isEmpty())
             this.graph_drawer.add_clash_free_node(node);
         return clash_free;
     }
@@ -752,7 +759,7 @@ public class Reasoner {
             clash_free = this.tableau_algorithm(this.root, this.L_x, this.node_index);
         else{
             System.out.println("Senza lazy unfolding:");
-            clash_free = this.tableau_algorithm_non_empty_tbox(this.root, null, this.L_x, this.node_index, root);
+            clash_free = this.tableau_algorithm_non_empty_tbox(this.root, null, this.L_x, root);
         }
         if(this.draw_graph)
             this.graph_drawer.save_graph(save_path);

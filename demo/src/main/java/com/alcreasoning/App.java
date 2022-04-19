@@ -78,7 +78,7 @@ public final class App {
         */
         // Implementare input C da prompt o campo testo
         // quindi va costruita con il data factory
-        OntologyPreprocessor preproc = new OntologyPreprocessor("concept_1.owl", "KB1.owl");
+        OntologyPreprocessor preproc = new OntologyPreprocessor("concept_2.owl", "KB10.owl");
         System.out.println("\n\n\nLogical Axioms:\n");
         ///////nord
         FunnyVisitor v = new FunnyVisitor();
