@@ -29,6 +29,7 @@ import guru.nidi.graphviz.engine.Format;
 import guru.nidi.graphviz.engine.Graphviz;
 import guru.nidi.graphviz.model.MutableGraph;
 import guru.nidi.graphviz.model.MutableNode;
+import guru.nidi.graphviz.model.Node;
 
 import static guru.nidi.graphviz.model.Factory.*;
 
@@ -342,21 +343,21 @@ public class Reasoner {
         return clash_free;
     }
 
-    private MutableNode update_graph(boolean or_branch, MutableNode node, String individual_name, OWLObjectPropertyExpression property){
-        MutableNode child_node = null;
+    private Node update_graph(boolean or_branch, Node node, String individual_name, OWLObjectPropertyExpression property){
+        Node child_node = null;
         if(this.draw_graph){
             if(or_branch)
-                child_node = this.graph_drawer.add_new_child(node, "" + FunnyVisitor.union, L_x, individual_name);
+                child_node = this.graph_drawer.add_new_child(node, "" + FunnyVisitor.union, individual_name);
             else{
                 property.accept(this.return_visitor);
-                child_node = this.graph_drawer.add_new_child(node, this.return_visitor.get_return_string(), L_x, individual_name);
+                child_node = this.graph_drawer.add_new_child(node, this.return_visitor.get_return_string(), individual_name);
             }
         }
 
         return child_node;
     }
 
-    public boolean tableau_algorithm_non_empty_tbox(OWLNamedIndividual x, HashSet<OWLObject> L_parent, HashSet<OWLObject> L_x, int node_index, MutableNode node){
+    public boolean tableau_algorithm_non_empty_tbox(OWLNamedIndividual x, HashSet<OWLObject> L_parent, HashSet<OWLObject> L_x, int node_index, Node node){
         HashSet<OWLClassExpression> disjointed;
         HashSet<OWLObjectSomeValuesFrom> owl_some_values_set;
         HashSet<OWLObjectAllValuesFrom> owl_all_values_set;
@@ -376,6 +377,8 @@ public class Reasoner {
             return true;
         }
 
+        // Aggiungo L_x al nodo dopo regola AND
+        node = this.graph_drawer.add_L_x_to_node(node, L_x, x.getIRI().getShortForm());
 
         added_joint = this.addall_axiom_to_abox(or_visitor.get_rule_set_and_reset(), x);
         
@@ -383,6 +386,7 @@ public class Reasoner {
         if(!this.check_not_clash(L_x)){
             // rimuovo congiunti dall'ABox
             this.removeall_axiom_from_abox(added_joint);
+            this.graph_drawer.add_clash_node(node);
             return false;
         }
         
@@ -437,7 +441,7 @@ public class Reasoner {
                     ////
                     
                     // Grafo
-                    MutableNode child_node = this.update_graph(true, node, x.getIRI().getShortForm(), null);
+                    Node child_node = this.update_graph(true, node, x.getIRI().getShortForm(), null);
 
                     clash_free = tableau_algorithm_non_empty_tbox(x, null, L_x, node_index, child_node);
                     if(clash_free){
@@ -469,6 +473,7 @@ public class Reasoner {
         if(!(clash_free = this.check_not_clash(L_x))){
             // rimuovo congiunti dall'ABox
             this.removeall_axiom_from_abox(added_joint);
+            this.graph_drawer.add_clash_node(node);
             return false;
         }
 
@@ -524,7 +529,7 @@ public class Reasoner {
                                   });
                 
                 // Grafo
-                MutableNode child_node = this.update_graph(false, node, x.getIRI().getShortForm(), property);
+                Node child_node = this.update_graph(false, node, x.getIRI().getShortForm(), property);
 
                 clash_free = tableau_algorithm_non_empty_tbox(child, L_x, L_child, this.node_index, child_node);
 
@@ -536,6 +541,9 @@ public class Reasoner {
         }
         System.out.println("Fine chiamata nodo x_" + node_index);
         System.out.println("Clash free: " + clash_free);
+        // Grafo
+        if(clash_free)
+            this.graph_drawer.add_clash_free_node(node);
         return clash_free;
     }
 
@@ -738,7 +746,7 @@ public class Reasoner {
         File dir = new File("./ProgettoIW/labels");
         if(!dir.exists())
             dir.mkdir();
-        MutableNode root = mutNode("x_0");
+        Node root = this.graph_drawer.create_new_node("x_0");
         boolean clash_free;
         if(this.Ĉ == null)
             clash_free = this.tableau_algorithm(this.root, this.L_x, this.node_index);
@@ -752,7 +760,7 @@ public class Reasoner {
     }
 
     public boolean check_consistency_lazy_unfolding(){
-        MutableNode root = mutNode("x_0");
+        Node root = node("x_0");
         boolean clash_free;
         if(this.Ĉ == null)
             clash_free = this.tableau_algorithm(this.root, this.L_x, this.node_index);

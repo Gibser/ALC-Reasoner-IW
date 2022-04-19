@@ -115,7 +115,7 @@ public final class App {
         Pair<OWLClassExpression, Pair<HashSet<OWLObject>, HashSet<OWLObject>>> KB_and_Ĉ = preproc.preprocess_tbox_and_concept();
         Reasoner r = new Reasoner(KB_and_Ĉ.getKey(), KB_and_Ĉ.getValue().getKey(), KB_and_Ĉ.getValue().getValue(), preproc.get_tbox_ontology_IRI(), true);
         Instant start = Instant.now();
-        System.out.println(r.check_consistency("./ProgettoIW/graphs/tableaux.svg"));
+        System.out.println(r.check_consistency("./graphs/tableaux.svg"));
         Instant end = Instant.now();
         System.out.println("\nElapsed Time: "+ Duration.between(start, end).toMillis()+"ms");
     }
