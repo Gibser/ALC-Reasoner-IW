@@ -48,13 +48,15 @@ public class Reasoner {
     private int node_index = -1;
     private OWLClassExpression Ĉ = null;
     private OWLNamedIndividual root;
-    LazyUnfoldingVisitor lazy_unfolding_v;
+    private LazyUnfoldingVisitor lazy_unfolding_v;
     //Model graph;
     //MutableGraph graph;
-    GraphDrawer graph_drawer;
-    Node last_parent;
-    Node last_child;
-    boolean draw_graph;
+    private GraphDrawer graph_drawer;
+    private Node last_parent;
+    private Node last_child;
+    private boolean draw_graph;
+    private boolean can_draw_clash_free = false;
+
 
     private Reasoner(IRI ontology_iri, boolean draw_graph){
         this.factory = OntologyPreprocessor.concept_man.getOWLDataFactory();
@@ -486,7 +488,16 @@ public class Reasoner {
         System.out.println("-----------------------------------");
         System.out.println("Applicazione regola esiste");
         System.out.println("-----------------------------------");
+
+        // Per grafo
+        int exists_processed = 0;
+
         for(OWLObjectSomeValuesFrom obj : owl_some_values_set){
+            // Per grafo: Se sono arrivato all'ultimo esiste da valutare, allora posso iniziare a settare true can_draw_clash_free.
+            // Se l'ultimo esiste è clash free allora verrà rappresentato nel grafo, altrimenti ci sarà il return false
+            if(++exists_processed == owl_some_values_set.size())
+                this.can_draw_clash_free = true;
+
             OWLClassExpression filler = obj.getFiller();
             OWLObjectPropertyExpression property = obj.getProperty();
             boolean exists_rule_condition =
@@ -537,7 +548,10 @@ public class Reasoner {
 
                 if(!clash_free){
                     this.removeall_axiom_from_abox(added_axioms);
-                    break;
+                    // Grafo
+                    this.can_draw_clash_free = false;
+                    return false;                                   // posso fare direttamente return false invece di break(?)
+                    //break;
                 }
                 
                 else{
@@ -549,8 +563,15 @@ public class Reasoner {
         System.out.println("Fine chiamata nodo " + x.getIRI().getShortForm());
         System.out.println("Clash free: " + clash_free);
         // Grafo
-        if(clash_free && owl_some_values_set.isEmpty())
+        if(clash_free && owl_some_values_set.isEmpty() && this.can_draw_clash_free){
             this.graph_drawer.add_clash_free_node(node);
+            this.can_draw_clash_free = false;
+        }
+        // Se il nodo è clash free inserisco un nodo pallino verde
+        else if(clash_free && owl_some_values_set.isEmpty() && !this.can_draw_clash_free)
+            this.graph_drawer.add_child_clash_free_node(node);
+        
+        ///////////
         return clash_free;
     }
 

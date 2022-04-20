@@ -1,0 +1,198 @@
+<svg width="500px" height="2651px"
+ viewBox="0.00 0.00 142.00 753.00" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+<g id="graph0" class="graph" transform="scale(1.0 1.0) rotate(0.0) translate(4.0 749.0)">
+<title>Tableau</title>
+<polygon fill="white" stroke="transparent" points="-4,4 -4,-749 138,-749 138,4 -4,4"/>
+<!-- 0 -->
+<g id="node1" class="node">
+<title>0</title>
+<ellipse fill="none" stroke="black" cx="61" cy="-700" rx="27" ry="18"/>
+<text text-anchor="start" x="54" y="-697.3" font-family="Times New Roman,serif" font-size="14.00">x</text>
+<text text-anchor="start" x="61" y="-697.3" font-family="Times New Roman,serif" baseline-shift="sub" font-size="14.00">0</text>
+<g id="a_node1_0"><a xlink:href="file:///C:\Users\gpepp\Desktop\Universita\Magistrale\Intelligent Web\ProgettoIW\labels\1_30" xlink:title="x&lt;sub&gt;0&lt;/sub&gt;">
+<polygon fill="none" stroke="black" points="1,-718.5 1,-743.5 33,-743.5 33,-718.5 1,-718.5"/>
+<text text-anchor="start" x="6" y="-728.3" font-family="Times New Roman,serif" font-size="14.00">L</text>
+<text text-anchor="start" x="15" y="-728.3" font-family="Times New Roman,serif" baseline-shift="sub" font-size="14.00">x</text>
+<text text-anchor="start" x="21" y="-728.3" font-family="Times New Roman,serif" baseline-shift="sub" font-size="14.00">0</text>
+</a>
+</g>
+<polygon fill="none" stroke="black" points="0,-718 0,-745 34,-745 34,-718 0,-718"/>
+</g>
+<!-- 1 -->
+<g id="node2" class="node">
+<title>1</title>
+<ellipse fill="none" stroke="black" cx="61" cy="-613" rx="27" ry="18"/>
+<text text-anchor="start" x="54" y="-610.3" font-family="Times New Roman,serif" font-size="14.00">x</text>
+<text text-anchor="start" x="61" y="-610.3" font-family="Times New Roman,serif" baseline-shift="sub" font-size="14.00">0</text>
+<g id="a_node2_1"><a xlink:href="file:///C:\Users\gpepp\Desktop\Universita\Magistrale\Intelligent Web\ProgettoIW\labels\2_27" xlink:title="x&lt;sub&gt;0&lt;/sub&gt;">
+<polygon fill="none" stroke="black" points="1,-631.5 1,-656.5 33,-656.5 33,-631.5 1,-631.5"/>
+<text text-anchor="start" x="6" y="-641.3" font-family="Times New Roman,serif" font-size="14.00">L</text>
+<text text-anchor="start" x="15" y="-641.3" font-family="Times New Roman,serif" baseline-shift="sub" font-size="14.00">x</text>
+<text text-anchor="start" x="21" y="-641.3" font-family="Times New Roman,serif" baseline-shift="sub" font-size="14.00">0</text>
+</a>
+</g>
+<polygon fill="none" stroke="black" points="0,-631 0,-658 34,-658 34,-631 0,-631"/>
+</g>
+<!-- 0&#45;&gt;1 -->
+<g id="edge1" class="edge">
+<title>0&#45;&gt;1</title>
+<path fill="none" stroke="black" d="M61,-681.8C61,-670.16 61,-654.55 61,-641.24"/>
+<polygon fill="black" stroke="black" points="64.5,-641.18 61,-631.18 57.5,-641.18 64.5,-641.18"/>
+<text text-anchor="middle" x="70" y="-652.8" font-family="Times New Roman,serif" font-size="14.00">⊔</text>
+</g>
+<!-- 2 -->
+<g id="node3" class="node">
+<title>2</title>
+<ellipse fill="none" stroke="black" cx="61" cy="-526" rx="27" ry="18"/>
+<text text-anchor="start" x="54" y="-523.3" font-family="Times New Roman,serif" font-size="14.00">x</text>
+<text text-anchor="start" x="61" y="-523.3" font-family="Times New Roman,serif" baseline-shift="sub" font-size="14.00">0</text>
+<g id="a_node3_2"><a xlink:href="file:///C:\Users\gpepp\Desktop\Universita\Magistrale\Intelligent Web\ProgettoIW\labels\3_27" xlink:title="x&lt;sub&gt;0&lt;/sub&gt;">
+<polygon fill="none" stroke="black" points="1,-544.5 1,-569.5 33,-569.5 33,-544.5 1,-544.5"/>
+<text text-anchor="start" x="6" y="-554.3" font-family="Times New Roman,serif" font-size="14.00">L</text>
+<text text-anchor="start" x="15" y="-554.3" font-family="Times New Roman,serif" baseline-shift="sub" font-size="14.00">x</text>
+<text text-anchor="start" x="21" y="-554.3" font-family="Times New Roman,serif" baseline-shift="sub" font-size="14.00">0</text>
+</a>
+</g>
+<polygon fill="none" stroke="black" points="0,-544 0,-571 34,-571 34,-544 0,-544"/>
+</g>
+<!-- 1&#45;&gt;2 -->
+<g id="edge2" class="edge">
+<title>1&#45;&gt;2</title>
+<path fill="none" stroke="black" d="M61,-594.8C61,-583.16 61,-567.55 61,-554.24"/>
+<polygon fill="black" stroke="black" points="64.5,-554.18 61,-544.18 57.5,-554.18 64.5,-554.18"/>
+<text text-anchor="middle" x="70" y="-565.8" font-family="Times New Roman,serif" font-size="14.00">⊔</text>
+</g>
+<!-- 3 -->
+<g id="node4" class="node">
+<title>3</title>
+<ellipse fill="none" stroke="black" cx="61" cy="-439" rx="27" ry="18"/>
+<text text-anchor="start" x="54" y="-436.3" font-family="Times New Roman,serif" font-size="14.00">x</text>
+<text text-anchor="start" x="61" y="-436.3" font-family="Times New Roman,serif" baseline-shift="sub" font-size="14.00">1</text>
+<g id="a_node4_3"><a xlink:href="file:///C:\Users\gpepp\Desktop\Universita\Magistrale\Intelligent Web\ProgettoIW\labels\4_24" xlink:title="x&lt;sub&gt;1&lt;/sub&gt;">
+<polygon fill="none" stroke="black" points="1,-457.5 1,-482.5 33,-482.5 33,-457.5 1,-457.5"/>
+<text text-anchor="start" x="6" y="-467.3" font-family="Times New Roman,serif" font-size="14.00">L</text>
+<text text-anchor="start" x="15" y="-467.3" font-family="Times New Roman,serif" baseline-shift="sub" font-size="14.00">x</text>
+<text text-anchor="start" x="21" y="-467.3" font-family="Times New Roman,serif" baseline-shift="sub" font-size="14.00">1</text>
+</a>
+</g>
+<polygon fill="none" stroke="black" points="0,-457 0,-484 34,-484 34,-457 0,-457"/>
+</g>
+<!-- 2&#45;&gt;3 -->
+<g id="edge3" class="edge">
+<title>2&#45;&gt;3</title>
+<path fill="none" stroke="black" d="M61,-507.8C61,-496.16 61,-480.55 61,-467.24"/>
+<polygon fill="black" stroke="black" points="64.5,-467.18 61,-457.18 57.5,-467.18 64.5,-467.18"/>
+<text text-anchor="middle" x="66" y="-478.8" font-family="Times New Roman,serif" font-size="14.00">R</text>
+</g>
+<!-- 4 -->
+<g id="node5" class="node">
+<title>4</title>
+<ellipse fill="none" stroke="black" cx="61" cy="-352" rx="27" ry="18"/>
+<text text-anchor="start" x="54" y="-349.3" font-family="Times New Roman,serif" font-size="14.00">x</text>
+<text text-anchor="start" x="61" y="-349.3" font-family="Times New Roman,serif" baseline-shift="sub" font-size="14.00">1</text>
+<g id="a_node5_4"><a xlink:href="file:///C:\Users\gpepp\Desktop\Universita\Magistrale\Intelligent Web\ProgettoIW\labels\5_27" xlink:title="x&lt;sub&gt;1&lt;/sub&gt;">
+<polygon fill="none" stroke="black" points="1,-370.5 1,-395.5 33,-395.5 33,-370.5 1,-370.5"/>
+<text text-anchor="start" x="6" y="-380.3" font-family="Times New Roman,serif" font-size="14.00">L</text>
+<text text-anchor="start" x="15" y="-380.3" font-family="Times New Roman,serif" baseline-shift="sub" font-size="14.00">x</text>
+<text text-anchor="start" x="21" y="-380.3" font-family="Times New Roman,serif" baseline-shift="sub" font-size="14.00">1</text>
+</a>
+</g>
+<polygon fill="none" stroke="black" points="0,-370 0,-397 34,-397 34,-370 0,-370"/>
+</g>
+<!-- 3&#45;&gt;4 -->
+<g id="edge4" class="edge">
+<title>3&#45;&gt;4</title>
+<path fill="none" stroke="black" d="M61,-420.8C61,-409.16 61,-393.55 61,-380.24"/>
+<polygon fill="black" stroke="black" points="64.5,-380.18 61,-370.18 57.5,-380.18 64.5,-380.18"/>
+<text text-anchor="middle" x="70" y="-391.8" font-family="Times New Roman,serif" font-size="14.00">⊔</text>
+</g>
+<!-- 5 -->
+<g id="node6" class="node">
+<title>5</title>
+<text text-anchor="middle" x="35" y="-261.3" font-family="Times New Roman,serif" font-size="14.00" fill="#00cc00">⬤</text>
+</g>
+<!-- 4&#45;&gt;5 -->
+<g id="edge6" class="edge">
+<title>4&#45;&gt;5</title>
+<path fill="none" stroke="black" d="M55.86,-334.21C52.25,-322.41 47.35,-306.38 43.2,-292.82"/>
+<polygon fill="black" stroke="black" points="46.49,-291.59 40.22,-283.05 39.79,-293.64 46.49,-291.59"/>
+</g>
+<!-- 6 -->
+<g id="node7" class="node">
+<title>6</title>
+<ellipse fill="none" stroke="black" cx="107" cy="-265" rx="27" ry="18"/>
+<text text-anchor="start" x="100" y="-262.3" font-family="Times New Roman,serif" font-size="14.00">x</text>
+<text text-anchor="start" x="107" y="-262.3" font-family="Times New Roman,serif" baseline-shift="sub" font-size="14.00">2</text>
+<g id="a_node7_5"><a xlink:href="file:///C:\Users\gpepp\Desktop\Universita\Magistrale\Intelligent Web\ProgettoIW\labels\7_20" xlink:title="x&lt;sub&gt;2&lt;/sub&gt;">
+<polygon fill="none" stroke="black" points="47,-283.5 47,-308.5 79,-308.5 79,-283.5 47,-283.5"/>
+<text text-anchor="start" x="52" y="-293.3" font-family="Times New Roman,serif" font-size="14.00">L</text>
+<text text-anchor="start" x="61" y="-293.3" font-family="Times New Roman,serif" baseline-shift="sub" font-size="14.00">x</text>
+<text text-anchor="start" x="67" y="-293.3" font-family="Times New Roman,serif" baseline-shift="sub" font-size="14.00">2</text>
+</a>
+</g>
+<polygon fill="none" stroke="black" points="46,-283 46,-310 80,-310 80,-283 46,-283"/>
+</g>
+<!-- 4&#45;&gt;6 -->
+<g id="edge5" class="edge">
+<title>4&#45;&gt;6</title>
+<path fill="none" stroke="black" d="M69.87,-334.61C76.53,-322.3 85.77,-305.23 93.37,-291.19"/>
+<polygon fill="black" stroke="black" points="96.63,-292.51 98.31,-282.05 90.48,-289.18 96.63,-292.51"/>
+<text text-anchor="middle" x="91" y="-304.8" font-family="Times New Roman,serif" font-size="14.00">R</text>
+</g>
+<!-- 7 -->
+<g id="node8" class="node">
+<title>7</title>
+<ellipse fill="none" stroke="black" cx="107" cy="-178" rx="27" ry="18"/>
+<text text-anchor="start" x="100" y="-175.3" font-family="Times New Roman,serif" font-size="14.00">x</text>
+<text text-anchor="start" x="107" y="-175.3" font-family="Times New Roman,serif" baseline-shift="sub" font-size="14.00">2</text>
+<g id="a_node8_6"><a xlink:href="file:///C:\Users\gpepp\Desktop\Universita\Magistrale\Intelligent Web\ProgettoIW\labels\8_14" xlink:title="x&lt;sub&gt;2&lt;/sub&gt;">
+<polygon fill="none" stroke="black" points="47,-196.5 47,-221.5 79,-221.5 79,-196.5 47,-196.5"/>
+<text text-anchor="start" x="52" y="-206.3" font-family="Times New Roman,serif" font-size="14.00">L</text>
+<text text-anchor="start" x="61" y="-206.3" font-family="Times New Roman,serif" baseline-shift="sub" font-size="14.00">x</text>
+<text text-anchor="start" x="67" y="-206.3" font-family="Times New Roman,serif" baseline-shift="sub" font-size="14.00">2</text>
+</a>
+</g>
+<polygon fill="none" stroke="black" points="46,-196 46,-223 80,-223 80,-196 46,-196"/>
+</g>
+<!-- 6&#45;&gt;7 -->
+<g id="edge7" class="edge">
+<title>6&#45;&gt;7</title>
+<path fill="none" stroke="black" d="M107,-246.8C107,-235.16 107,-219.55 107,-206.24"/>
+<polygon fill="black" stroke="black" points="110.5,-206.18 107,-196.18 103.5,-206.18 110.5,-206.18"/>
+<text text-anchor="middle" x="116" y="-217.8" font-family="Times New Roman,serif" font-size="14.00">⊔</text>
+</g>
+<!-- 8 -->
+<g id="node9" class="node">
+<title>8</title>
+<ellipse fill="none" stroke="black" cx="107" cy="-91" rx="27" ry="18"/>
+<text text-anchor="start" x="100" y="-88.3" font-family="Times New Roman,serif" font-size="14.00">x</text>
+<text text-anchor="start" x="107" y="-88.3" font-family="Times New Roman,serif" baseline-shift="sub" font-size="14.00">2</text>
+<g id="a_node9_7"><a xlink:href="file:///C:\Users\gpepp\Desktop\Universita\Magistrale\Intelligent Web\ProgettoIW\labels\9_17" xlink:title="x&lt;sub&gt;2&lt;/sub&gt;">
+<polygon fill="none" stroke="black" points="47,-109.5 47,-134.5 79,-134.5 79,-109.5 47,-109.5"/>
+<text text-anchor="start" x="52" y="-119.3" font-family="Times New Roman,serif" font-size="14.00">L</text>
+<text text-anchor="start" x="61" y="-119.3" font-family="Times New Roman,serif" baseline-shift="sub" font-size="14.00">x</text>
+<text text-anchor="start" x="67" y="-119.3" font-family="Times New Roman,serif" baseline-shift="sub" font-size="14.00">2</text>
+</a>
+</g>
+<polygon fill="none" stroke="black" points="46,-109 46,-136 80,-136 80,-109 46,-109"/>
+</g>
+<!-- 7&#45;&gt;8 -->
+<g id="edge8" class="edge">
+<title>7&#45;&gt;8</title>
+<path fill="none" stroke="black" d="M107,-159.8C107,-148.16 107,-132.55 107,-119.24"/>
+<polygon fill="black" stroke="black" points="110.5,-119.18 107,-109.18 103.5,-119.18 110.5,-119.18"/>
+<text text-anchor="middle" x="116" y="-130.8" font-family="Times New Roman,serif" font-size="14.00">⊔</text>
+</g>
+<!-- 9 -->
+<g id="node10" class="node">
+<title>9</title>
+<text text-anchor="middle" x="107" y="-14.3" font-family="Times New Roman,serif" font-size="14.00" fill="#00cc00">✓</text>
+</g>
+<!-- 8&#45;&gt;9 -->
+<g id="edge9" class="edge">
+<title>8&#45;&gt;9</title>
+<path fill="none" stroke="black" d="M107,-72.81C107,-64.79 107,-55.05 107,-46.07"/>
+<polygon fill="black" stroke="black" points="110.5,-46.03 107,-36.03 103.5,-46.03 110.5,-46.03"/>
+</g>
+</g>
+</svg>

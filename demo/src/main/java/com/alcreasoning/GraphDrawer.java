@@ -79,7 +79,7 @@ public class GraphDrawer {
         String file_path = this.write_L_x_to_file(L_x, individual_name);
         //String html = "<table border='0'><tr><td><a href=\"file:///" + System.getProperty("user.dir") + "\\" + file_path + "\">L_" + individual_name + "</a></td></tr></table>";
         //String html = "<a href=\"file:///" + System.getProperty("user.dir") + "\\" + file_path + "\">L_" + individual_name + "</a>";
-        String html = "<table cellspacing='0' cellpadding='2' border='1'><tr><td href=\"file:///" + System.getProperty("user.dir") + "\\" + file_path + "\">L_" + individual_name + "</td></tr></table>";
+        String html = "<table cellspacing='0' cellpadding='2' border='1'><tr><td href=\"file:///" + System.getProperty("user.dir") + "\\" + file_path + "\">L<sub>" + individual_name + "</sub></td></tr></table>";
         System.out.println(html);
         Node child_node = node("" + this.graphviz_node_id++).with(Label.of(individual_name)).with(Label.html(html).external());
         return child_node;
@@ -87,13 +87,24 @@ public class GraphDrawer {
     
     public Node add_L_x_to_node(Node node, HashSet<OWLObject> L_x, String individual_name){
         String file_path = this.write_L_x_to_file(L_x, individual_name);
-        String html = "<table cellspacing='0' cellpadding='2' border='1'><tr><td href=\"file:///" + System.getProperty("user.dir") + "\\" + file_path + "\">L_" + individual_name + "</td></tr></table>";
+        String[] name_split = individual_name.split("_");
+        String html = "<table cellspacing='0' cellpadding='4' border='1'><tr><td href=\"file:///" + System.getProperty("user.dir") + "\\" + file_path + "\">L<sub>" + name_split[0] + "<sub>" + name_split[1] + "</sub></sub></td></tr></table>";
         return node.with(Label.html(html).external());
     }
 
     public Node create_new_node(String individual_name){
-        Node child_node = node("" + this.graphviz_node_id++).with(Label.of(individual_name));
+        String[] name_split = individual_name.split("_");
+        Node child_node = node("" + this.graphviz_node_id++).with(Label.html(name_split[0] + "<sub>" + name_split[1] + "</sub>"));
         return child_node;
+    }
+
+    private Node create_child_clash_free_node(){
+        return node("" + this.graphviz_node_id++).with(Label.of("\u2B24"), Shape.NONE, Color.rgb("00cc00").font());
+    }    
+
+    public void add_child_clash_free_node(Node child){
+        Node clash_free_node = this.create_child_clash_free_node();
+        this.node_list.add(this.add_link_to_node(child, clash_free_node));
     }
 
     private Node create_clash_free_node(){
