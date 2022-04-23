@@ -17,6 +17,7 @@ import org.semanticweb.owlapi.model.OWLNamedIndividual;
 import org.semanticweb.owlapi.model.OWLObject;
 import org.semanticweb.owlapi.model.OWLObjectAllValuesFrom;
 import org.semanticweb.owlapi.model.OWLObjectComplementOf;
+import org.semanticweb.owlapi.model.OWLObjectIntersectionOf;
 import org.semanticweb.owlapi.model.OWLObjectPropertyAssertionAxiom;
 import org.semanticweb.owlapi.model.OWLObjectPropertyExpression;
 import org.semanticweb.owlapi.model.OWLObjectSomeValuesFrom;
@@ -375,12 +376,12 @@ public class Reasoner {
         L_x.addAll(or_visitor.get_rule_set());
 
         // Blocking
-        if(this.blocking(L_parent, L_x)){
+        if(this.Ĉ != null && this.blocking(L_parent, L_x)){
             System.out.println("Blocking");
             return true;
         }
 
-        // Aggiungo L_x al nodo dopo regola AND
+        // Grafo: Aggiungo L_x al nodo dopo regola AND
         node = this.graph_drawer.add_L_x_to_node(node, L_x, x.getIRI().getShortForm());
 
         added_joint = this.addall_axiom_to_abox(or_visitor.get_rule_set_and_reset(), x);
@@ -448,8 +449,9 @@ public class Reasoner {
 
                     clash_free = tableau_algorithm_non_empty_tbox(x, null, L_x, child_node);
                     if(clash_free){
+                        // Grafo
                         this.last_parent = child_node;
-                        System.out.println("Trovato true");
+                        //
                         break;
                     }
                     else{
@@ -477,6 +479,7 @@ public class Reasoner {
         if(!(clash_free = this.check_not_clash(L_x))){
             // rimuovo congiunti dall'ABox
             this.removeall_axiom_from_abox(added_joint);
+            // Grafo
             this.graph_drawer.add_clash_node(node);
             return false;
         }
@@ -525,12 +528,15 @@ public class Reasoner {
                 if(this.add_axiom_to_abox(instantiated_property_axiom))                                                            // Si aggiunge R(x, child) all'ABox 
                     added_axioms.add(instantiated_property_axiom);
                 
-                instantiated_axiom = this.instantiate_axiom(this.Ĉ, child);
-                if(this.add_axiom_to_abox(instantiated_axiom))                                                                 // Si aggiunge Ĉ(child) all'ABox
-                    added_axioms.add(instantiated_axiom);
-                
-                L_child.add(filler);                                                                                    
-                L_child.add(this.Ĉ);                                                                                    // L(x') = {C, Ĉ}
+                if(this.Ĉ != null){                                                                                                // TBox non vuota: L(x') U {Ĉ}
+                    L_child.add(this.Ĉ);        
+                    instantiated_axiom = this.instantiate_axiom(this.Ĉ, child);
+                    if(this.add_axiom_to_abox(instantiated_axiom))                                                                 // Si aggiunge Ĉ(child) all'ABox
+                        added_axioms.add(instantiated_axiom);
+                }
+
+                L_child.add(filler);                                                                                    // L(x') U {C};
+                                                                                                                        
                 
 
                 owl_all_values_set.stream()                                                                             // forall R.D
@@ -591,7 +597,7 @@ public class Reasoner {
                     L_x.contains(this.factory.getOWLObjectComplementOf(left_side).getNNF())     &&
                     !L_x.contains(this.factory.getOWLObjectComplementOf(right_side).getNNF())
                    )
-                    L_x.add(this.factory.getOWLObjectComplementOf(this.lazy_unfolding_v.get_right_side()).getNNF());
+                    added_axioms.add(this.factory.getOWLObjectComplementOf(this.lazy_unfolding_v.get_right_side()).getNNF());
         }
         return added_axioms;
     }
@@ -600,32 +606,64 @@ public class Reasoner {
         return L_parent == null ? false : L_parent.containsAll(L_x);
     }
 
-    public boolean tableau_algorithm_non_empty_tbox_lazy_unfolding(OWLNamedIndividual x, HashSet<OWLObject> L_parent, HashSet<OWLObject> L_x, int node_index){
+    private boolean contains_and(HashSet<OWLObject> added_lazy){
+        for(OWLObject obj : added_lazy){
+            if(obj instanceof OWLObjectIntersectionOf)
+                return true;
+        }
+        return false;
+    }
+
+
+    public boolean tableau_algorithm_non_empty_tbox_lazy_unfolding(OWLNamedIndividual x, HashSet<OWLObject> L_parent, HashSet<OWLObject> L_x, Node node){
         HashSet<OWLClassExpression> disjointed;
         HashSet<OWLObjectSomeValuesFrom> owl_some_values_set;
         HashSet<OWLObjectAllValuesFrom> owl_all_values_set;
         HashSet<OWLObject> added_conj_lazy = new HashSet<>();  // ;)
+        HashSet<OWLObject> added_lazy = new HashSet<>();
         boolean clash_free = false;
+        boolean apply_lazy_unfolding = true;
 
-        // Regole lazy unfolding
-        added_conj_lazy = this.lazy_unfolding_rules(L_x);
-        L_x.addAll(added_conj_lazy);
+        while(apply_lazy_unfolding){
+            
+            // Regola and
+            for(OWLObject obj : L_x){
+                obj.accept(or_visitor);
+            }
+            
+            L_x.addAll(or_visitor.get_rule_set());
 
-        // Regola and
-        for(OWLObject obj : L_x){
-            obj.accept(or_visitor);
+            // Regole lazy unfolding
+            added_lazy = this.lazy_unfolding_rules(L_x);
+            added_conj_lazy.addAll(added_lazy);
+            L_x.addAll(added_conj_lazy); 
+
+            if(this.contains_and(added_lazy))
+                apply_lazy_unfolding = false;
         }
 
-        L_x.addAll(or_visitor.get_rule_set());
-        
         // Blocking
         if(this.blocking(L_parent, L_x)){
             System.out.println("Blocking");
             return true;
         }
 
+        // Grafo: Aggiungo L_x al nodo dopo regola AND
+        node = this.graph_drawer.add_L_x_to_node(node, L_x, x.getIRI().getShortForm());
+
+        added_conj_lazy = this.addall_axiom_to_abox(added_conj_lazy, x);
         added_conj_lazy.addAll(this.addall_axiom_to_abox(or_visitor.get_rule_set_and_reset(), x));
         System.out.println("Dopo istanza");
+
+
+        // TODO: Controllare effettivo tempo risparmiato senza stampe
+        if(!this.check_not_clash(L_x)){
+            // rimuovo congiunti dall'ABox
+            this.removeall_axiom_from_abox(added_conj_lazy);
+            this.graph_drawer.add_clash_node(node);
+            return false;
+        }
+
         ////
         System.out.println();
         System.out.println("############# Chiamata ricorsiva #############");
@@ -660,31 +698,39 @@ public class Reasoner {
                 }
             }
             
-            if(!is_present && !disjointed.isEmpty()){
+            if(!is_present){
                 for(OWLObject disj : disjointed){
-                    HashSet<OWLObject> L_x_with_disj = new HashSet<>(L_x);
-                    L_x_with_disj.add(disj);
+                    //HashSet<OWLObject> L_x_with_disj = new HashSet<>(L_x);
+                    L_x.add(disj);
                     this.add_axiom_to_abox(disj, x);
                     ////
                     System.out.print("Aggiungo ");
                     disj.accept(this.v);
                     System.out.println();
                     ////
-                    clash_free = this.tableau_algorithm_non_empty_tbox_lazy_unfolding(x, null, L_x_with_disj, node_index);
+
+                    // Grafo
+                    Node child_node = this.update_graph(true, node, x.getIRI().getShortForm(), null);
+
+
+                    clash_free = this.tableau_algorithm_non_empty_tbox_lazy_unfolding(x, null, L_x, child_node);
                     if(clash_free){
+                        // Grafo
+                        this.last_parent = child_node;
+                        //
                         break;
                     }
                     else{
-                        //L_x.remove(disj);
+                        L_x.remove(disj);
                         this.abox.remove(this.factory.getOWLClassAssertionAxiom((OWLClassExpression) disj, x));
                     }
                 }
                 // Se finiscono i disgiunti e clash_free è ancora false, vuol dire che nessuna combinazione di disgiunti evita un clash, 
                 // quindi posso ritornare false
                 if(!clash_free){
+                    System.out.println("Disgiunti terminati: " + clash_free + "\n");
                     return false;
                 }
-                System.out.println("Disgiunti terminati\n");
             }
             // Se ho trovato un ramo clash free, posso interrompere l'iterazione e ritornare true
             // altrimenti si procede con l'iterazione
@@ -696,8 +742,10 @@ public class Reasoner {
         }
         // Controllo se localmente ci sono clash
         if(!(clash_free = this.check_not_clash(L_x))){
-            // rimuovo congiunti dall'ABox
+            // rimuovo congiunti e lazy dall'ABox
             this.removeall_axiom_from_abox(added_conj_lazy);
+            // Grafo
+            this.graph_drawer.add_clash_node(node);
             return false;
         }
 
@@ -708,6 +756,11 @@ public class Reasoner {
         System.out.println("-----------------------------------");
         System.out.println("Applicazione regola esiste");
         System.out.println("-----------------------------------");
+
+        // Per grafo
+        int exists_processed = 0;
+
+        // TODO: Continuare controllo con algoritmo senza lazy unfolding e aggiunta grafo da qui
         for(OWLObjectSomeValuesFrom obj : owl_some_values_set){
             OWLClassExpression filler = obj.getFiller();
             OWLObjectPropertyExpression property = obj.getProperty();
@@ -778,12 +831,10 @@ public class Reasoner {
         Node root_node = this.graph_drawer.create_new_node("x_0");
         
         boolean clash_free;
-        if(this.Ĉ == null)
-            clash_free = this.tableau_algorithm(this.root, this.L_x, this.node_index);
-        else{
-            System.out.println("Senza lazy unfolding:");
-            clash_free = this.tableau_algorithm_non_empty_tbox(this.root, null, this.L_x, root_node);
-        }
+
+        System.out.println("Senza lazy unfolding:");
+        clash_free = this.tableau_algorithm_non_empty_tbox(this.root, null, this.L_x, root_node);
+
         if(this.draw_graph)
             this.graph_drawer.save_graph(save_path);
         return clash_free;
@@ -792,12 +843,8 @@ public class Reasoner {
     public boolean check_consistency_lazy_unfolding(){
         //Node root = node("x_0");
         boolean clash_free;
-        if(this.Ĉ == null)
-            clash_free = this.tableau_algorithm(this.root, this.L_x, this.node_index);
-        else{
-            System.out.println("Con lazy unfolding:");
-            clash_free = this.tableau_algorithm_non_empty_tbox_lazy_unfolding(this.root, null, this.L_x, this.node_index);
-        }
+        System.out.println("Con lazy unfolding:");
+        clash_free = this.tableau_algorithm_non_empty_tbox_lazy_unfolding(this.root, null, this.L_x, this.node_index);
         return clash_free;
     }
 }

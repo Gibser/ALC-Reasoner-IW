@@ -27,8 +27,8 @@ public class OntologyPreprocessor {
     
     public static OWLOntologyManager concept_man = OWLManager.createOWLOntologyManager();
     public static OWLOntologyManager tbox_man = OWLManager.createOWLOntologyManager();
-
-    private OWLOntology concept;
+    
+    private Pair<OWLClass, OWLClassExpression> concept;
     private OWLOntology tbox;
     private HashSet<OWLLogicalAxiom> tbox_set;
     private OWLDataFactory factory;
@@ -36,6 +36,7 @@ public class OntologyPreprocessor {
     private AtomicConceptVisitor atomic_visitor;
     private OrAndPreprocessorVisitor or_and_preproc_visitor;
 
+    /*
     public OntologyPreprocessor(String concept_path, String tbox_path){
         File concept_file = new File(concept_path);
         File tbox_file = new File(tbox_path);
@@ -52,29 +53,35 @@ public class OntologyPreprocessor {
             e.printStackTrace();
         }
     }
+    */
 
-    public OntologyPreprocessor(String concept_path){
-        File concept_file = new File(concept_path);
+    // TBox non vuota
+    public OntologyPreprocessor(String tbox_path){
+        File tbox_file = new File(tbox_path);
         this.factory = tbox_man.getOWLDataFactory();
-        this.v = new FunnyVisitor();
         this.v = new FunnyVisitor();
         this.atomic_visitor = new AtomicConceptVisitor();
         this.or_and_preproc_visitor = new OrAndPreprocessorVisitor();
         this.tbox_set = new HashSet<>();
 
         try{
-            this.concept = tbox_man.loadOntologyFromOntologyDocument(concept_file);
+            this.tbox = tbox_man.loadOntologyFromOntologyDocument(tbox_file);
         }catch(OWLOntologyCreationException e){
             e.printStackTrace();
         }
+    }
+
+
+    public void set_concept(Pair<OWLClass, OWLClassExpression> concept){
+        this.concept = concept;
     }
 
     public OWLOntology getTBox(){
         return this.tbox;
     }
 
-    public IRI get_concept_ontology_IRI(){
-        return this.concept.getOntologyID().getOntologyIRI().get();
+    public OWLDataFactory getFactory(){
+        return this.factory;
     }
 
     public IRI get_tbox_ontology_IRI(){
@@ -125,21 +132,15 @@ public class OntologyPreprocessor {
         HashSet<OWLObject> L_x = new HashSet<>();
         HashSet<OWLObject> abox = new HashSet<>();
 
-        OWLObjectVisitor eq = new OWLObjectVisitor() {
-            public void visit(OWLEquivalentClassesAxiom ax) {
-                abox.add(ax.getOperandsAsList().get(0));  
-                L_x.add(ax.getOperandsAsList().get(1));   
-            }
-        };
+        //
+        System.out.println("Concetto: ");
+        this.concept.getKey().accept(this.v);
+        System.out.println(" equivalent to ");
+        this.concept.getValue().accept(this.v);
+        //
 
-        for(OWLLogicalAxiom ax : this.concept.getLogicalAxioms()){
-            ///
-            System.out.print("Concetto: ");
-            ax.getNNF().accept(v);
-            System.out.println();
-            ///
-            ax.getNNF().accept(eq);
-        }
+        abox.add(this.concept.getKey());
+        L_x.add(this.concept.getValue());
         
         return new Pair<HashSet<OWLObject>, HashSet<OWLObject>>(abox, L_x);
     }

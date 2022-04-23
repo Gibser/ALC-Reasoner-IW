@@ -43,6 +43,7 @@ public class GraphDrawer {
 
     private String write_L_x_to_file(HashSet<OWLObject> L_x, String individual_name){
         String L_x_string = this.return_set_as_string(L_x, "L_" + individual_name);
+        //TODO: Creare cartella se non esiste
         String folder = "labels\\";
         String filename = "" + this.graphviz_node_id;
         int duplicate_index = 1;

@@ -1,10 +1,19 @@
 package com.alcreasoning;
 
+import org.semanticweb.owlapi.apibinding.OWLManager;
+import org.semanticweb.owlapi.expression.ShortFormEntityChecker;
+import org.semanticweb.owlapi.model.OWLAnnotationProperty;
 import org.semanticweb.owlapi.model.OWLAxiom;
+import org.semanticweb.owlapi.model.OWLClass;
 import org.semanticweb.owlapi.model.OWLClassExpression;
+import org.semanticweb.owlapi.model.OWLDeclarationAxiom;
 import org.semanticweb.owlapi.model.OWLLogicalAxiom;
 import org.semanticweb.owlapi.model.OWLObject;
-
+import org.semanticweb.owlapi.util.BidirectionalShortFormProvider;
+import org.semanticweb.owlapi.util.BidirectionalShortFormProviderAdapter;
+import org.semanticweb.owlapi.util.ShortFormProvider;
+import org.semanticweb.owlapi.util.mansyntax.ManchesterOWLSyntaxParser;
+import org.semanticweb.owlapi.util.AnnotationValueShortFormProvider;
 import guru.nidi.graphviz.attribute.Color;
 import guru.nidi.graphviz.attribute.Font;
 import guru.nidi.graphviz.attribute.Label;
@@ -20,30 +29,69 @@ import static guru.nidi.graphviz.model.Factory.*;
 
 import javafx.util.Pair;
 
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.time.Duration;
 import java.time.Instant;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashSet;
+import java.util.List;
 
 import org.apache.jena.*;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.ModelFactory;
 import org.apache.jena.rdf.model.Resource;
 import org.apache.jena.vocabulary.VCARD;
+import org.checkerframework.checker.regex.qual.PartialRegex;
 
-
-/**
- * Hello world!
- */
 public final class App {
     private App() {
     }
 
-    /**
-     * Says hello to the world.
-     * @param args The arguments of the program.
-     */
+    static Pair<OWLClass, OWLClassExpression> get_concept_from_input(OntologyPreprocessor preproc){
+        BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
+        System.out.println("Enter concept name: ");
+    	String concept_name = null;
+    	try {
+    		concept_name = new String(reader.readLine());
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+
+    	System.out.println("Enter concept: ");
+    	String concept = null;
+    	try {
+    		concept = new String(reader.readLine());
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+
+        ShortFormProvider sfp =
+        new AnnotationValueShortFormProvider(Arrays.asList(preproc.getFactory().getRDFSLabel()),
+            Collections.<OWLAnnotationProperty, List<String>>emptyMap(), OntologyPreprocessor.tbox_man);
+
+        BidirectionalShortFormProvider shortFormProvider =
+        new BidirectionalShortFormProviderAdapter(OntologyPreprocessor.tbox_man.getOntologies(), sfp);
+        ShortFormEntityChecker owlEntityChecker = new ShortFormEntityChecker(shortFormProvider);
+        
+        ManchesterOWLSyntaxParser parser = OWLManager.createManchesterParser();
+        parser.setOWLEntityChecker(owlEntityChecker);
+        parser.setDefaultOntology(preproc.getTBox());
+
+
+        OWLClass c_name = preproc.getFactory().getOWLClass(preproc.getTBox().getOntologyID().getOntologyIRI().get() + "#" + concept_name);
+
+        OWLClassExpression class_exp = parser.parseClassExpression(concept).getNNF();
+
+        OWLDeclarationAxiom concept_declaration = preproc.getFactory().getOWLDeclarationAxiom(c_name);
+        preproc.getTBox().add(concept_declaration);
+
+        return new Pair<OWLClass, OWLClassExpression>(c_name, class_exp);
+    }
+
     public static void main(String[] args) {
         /*
         // some definitions
@@ -62,28 +110,20 @@ public final class App {
         model.write(System.out);
 
         */
-        /*
-        // Graphviz
-        MutableNode node = mutNode("x0").add((Label.of("L_x").external()));
-        MutableGraph g = mutGraph("example1").setDirected(true);//.add(mutNode("a").add(Color.RED).add((Label.of("Alleikum").external())).addLink(mutNode("b")));
-        //g.add(node.addLink());// .add((Label.of("L_x").external())));
-        g.add(node.addLink(to(mutNode(" ").add(Label.of("x0"))).with(Label.of("R"))));
-        g.add(node.addLink(to(mutNode("x1")).with(Label.of("R"))));
-        try{
-            Graphviz.fromGraph(g).width(200).render(Format.PNG).toFile(new File("./ProgettoIW/ex1i.png"));
-        }
-        catch(IOException ex){
-            System.out.println("ALKASJHASDF");
-        }
-        */
-        // Implementare input C da prompt o campo testo
-        // quindi va costruita con il data factory
-        OntologyPreprocessor preproc = new OntologyPreprocessor("concept_2.owl", "KB10.owl");
-        System.out.println("\n\n\nLogical Axioms:\n");
+
         ///////nord
         FunnyVisitor v = new FunnyVisitor();
         OrAndPreprocessorVisitor p = new OrAndPreprocessorVisitor();
         AtomicConceptVisitor n = new AtomicConceptVisitor();
+
+        OntologyPreprocessor preproc = new OntologyPreprocessor("KB_12.owl");
+
+        Pair<OWLClass, OWLClassExpression> concept = get_concept_from_input(preproc);
+
+        preproc.set_concept(concept);
+        
+        System.out.println("\n\n\nLogical Axioms:\n");
+        
 
         for(OWLAxiom ax : preproc.getTBox().getLogicalAxioms()){
             System.out.print("Assioma: ");
@@ -114,10 +154,12 @@ public final class App {
         //Pair<OWLClassExpression, Pair<HashSet<OWLObject>, HashSet<OWLObject>>> KB_and_Ĉ = preproc.preprocess_tbox_and_concept(partition.getKey());
         Pair<OWLClassExpression, Pair<HashSet<OWLObject>, HashSet<OWLObject>>> KB_and_Ĉ = preproc.preprocess_tbox_and_concept();
         Reasoner r = new Reasoner(KB_and_Ĉ.getKey(), KB_and_Ĉ.getValue().getKey(), KB_and_Ĉ.getValue().getValue(), preproc.get_tbox_ontology_IRI(), true);
+        
         Instant start = Instant.now();
         System.out.println(r.check_consistency("./graphs/tableau.svg"));
         Instant end = Instant.now();
         System.out.println("\nElapsed Time: "+ Duration.between(start, end).toMillis()+"ms");
+        
     }
 
 }
