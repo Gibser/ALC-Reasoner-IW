@@ -774,13 +774,15 @@ public class Reasoner {
         File dir = new File("./ProgettoIW/labels");
         if(!dir.exists())
             dir.mkdir();
-        Node root = this.graph_drawer.create_new_node("x_0");
+        //Grafo
+        Node root_node = this.graph_drawer.create_new_node("x_0");
+        
         boolean clash_free;
         if(this.Ĉ == null)
             clash_free = this.tableau_algorithm(this.root, this.L_x, this.node_index);
         else{
             System.out.println("Senza lazy unfolding:");
-            clash_free = this.tableau_algorithm_non_empty_tbox(this.root, null, this.L_x, root);
+            clash_free = this.tableau_algorithm_non_empty_tbox(this.root, null, this.L_x, root_node);
         }
         if(this.draw_graph)
             this.graph_drawer.save_graph(save_path);
@@ -788,7 +790,7 @@ public class Reasoner {
     }
 
     public boolean check_consistency_lazy_unfolding(){
-        Node root = node("x_0");
+        //Node root = node("x_0");
         boolean clash_free;
         if(this.Ĉ == null)
             clash_free = this.tableau_algorithm(this.root, this.L_x, this.node_index);
