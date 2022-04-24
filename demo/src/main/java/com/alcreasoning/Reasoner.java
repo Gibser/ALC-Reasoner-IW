@@ -760,8 +760,12 @@ public class Reasoner {
         // Per grafo
         int exists_processed = 0;
 
-        // TODO: Continuare controllo con algoritmo senza lazy unfolding e aggiunta grafo da qui
         for(OWLObjectSomeValuesFrom obj : owl_some_values_set){
+            // Per grafo: Se sono arrivato all'ultimo esiste da valutare, allora posso iniziare a settare true can_draw_clash_free.
+            // Se l'ultimo esiste è clash free allora verrà rappresentato nel grafo, altrimenti ci sarà il return false
+            if(++exists_processed == owl_some_values_set.size())
+                this.can_draw_clash_free = true;
+            
             OWLClassExpression filler = obj.getFiller();
             OWLObjectPropertyExpression property = obj.getProperty();
             boolean exists_rule_condition =
@@ -789,18 +793,22 @@ public class Reasoner {
                 if(this.add_axiom_to_abox(instantiated_property_axiom))                                                            // Si aggiunge R(x, child) all'ABox 
                     added_axioms.add(instantiated_property_axiom);
                 
-                instantiated_axiom = this.instantiate_axiom(this.Ĉ, child);
-                if(this.add_axiom_to_abox(instantiated_axiom))                                                                 // Si aggiunge Ĉ(child) all'ABox
-                    added_axioms.add(instantiated_axiom);
+                if(this.Ĉ != null){                                                                                                // TBox non vuota: L(x') U {Ĉ}
+                    L_child.add(this.Ĉ);        
+                    instantiated_axiom = this.instantiate_axiom(this.Ĉ, child);
+                    if(this.add_axiom_to_abox(instantiated_axiom))                                                                 // Si aggiunge Ĉ(child) all'ABox
+                        added_axioms.add(instantiated_axiom);
+                }
 
                 L_child.add(filler);                                                                                    
-                L_child.add(this.Ĉ);                                                                                    // L(x') = {C, Ĉ}
-
+                                                                                                    // L(x') = {C, Ĉ}
+                /*
                 // Vanno aggiunti anche gli assiomi dell'esiste perché vanno rimossi se il figlio non è clash free
                 added_axioms.add(this.instantiate_axiom(filler, child));
                 added_axioms.add(this.factory.getOWLObjectPropertyAssertionAxiom(property, x, child));
                 added_axioms.add(this.instantiate_axiom(this.Ĉ, child));
-                
+                */
+
                 owl_all_values_set.stream()                                                                                      // forall R.D
                     .filter(e -> e.getProperty().equals(property))                                                      // Filtra i per ogni con la stessa relazione R
                     .forEach(e -> {
@@ -809,16 +817,34 @@ public class Reasoner {
                                         added_axioms.add(this.instantiate_axiom(e.getFiller(), child));
                                   });
 
-                clash_free = tableau_algorithm_non_empty_tbox_lazy_unfolding(child, L_x, L_child, this.node_index);
+                // Grafo
+                Node child_node = this.update_graph(false, node, child.getIRI().getShortForm(), property);
+
+                clash_free = tableau_algorithm_non_empty_tbox_lazy_unfolding(child, L_x, L_child, child_node);
 
                 if(!clash_free){
                     this.removeall_axiom_from_abox(added_axioms);
-                    break;
+                    // Grafo
+                    this.can_draw_clash_free = false;
+                    //break;
+                }
+                else{
+                    this.last_child = child_node;
+                    node = this.last_parent;
                 }
             }
         }
         System.out.println("Fine chiamata nodo x_" + node_index);
         System.out.println("Clash free: " + clash_free);
+        // Grafo
+        if(clash_free && owl_some_values_set.isEmpty() && this.can_draw_clash_free){
+            this.graph_drawer.add_clash_free_node(node);
+            this.can_draw_clash_free = false;
+        }
+        // Se il nodo è clash free inserisco un nodo pallino verde
+        else if(clash_free && owl_some_values_set.isEmpty() && !this.can_draw_clash_free)
+            this.graph_drawer.add_child_clash_free_node(node);
+        ///////////
         return clash_free;
     }
 
