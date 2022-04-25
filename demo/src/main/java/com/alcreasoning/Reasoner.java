@@ -788,7 +788,7 @@ public class Reasoner {
                 OWLObjectPropertyAssertionAxiom instantiated_property_axiom = this.instantiate_property_axiom(property, x, child);
                 
                 if(this.add_axiom_to_abox(instantiated_axiom))
-                    added_axioms.add(instantiated_axiom);                                                                                   // Si aggiunge C(child) all'ABox
+                    added_axioms.add(instantiated_axiom);                                                                          // Si aggiunge C(child) all'ABox
                 
                 if(this.add_axiom_to_abox(instantiated_property_axiom))                                                            // Si aggiunge R(x, child) all'ABox 
                     added_axioms.add(instantiated_property_axiom);
@@ -800,8 +800,8 @@ public class Reasoner {
                         added_axioms.add(instantiated_axiom);
                 }
 
-                L_child.add(filler);                                                                                    
-                                                                                                    // L(x') = {C, Ĉ}
+                L_child.add(filler);                                                                                               // L(x') U {C};
+              
                 /*
                 // Vanno aggiunti anche gli assiomi dell'esiste perché vanno rimossi se il figlio non è clash free
                 added_axioms.add(this.instantiate_axiom(filler, child));
@@ -866,11 +866,19 @@ public class Reasoner {
         return clash_free;
     }
 
-    public boolean check_consistency_lazy_unfolding(){
-        //Node root = node("x_0");
+    public boolean check_consistency_lazy_unfolding(String save_path){
+        File dir = new File("./ProgettoIW/labels");
+        if(!dir.exists())
+            dir.mkdir();
+        //Grafo
+        Node root_node = this.graph_drawer.create_new_node("x_0");
+
         boolean clash_free;
         System.out.println("Con lazy unfolding:");
-        clash_free = this.tableau_algorithm_non_empty_tbox_lazy_unfolding(this.root, null, this.L_x, this.node_index);
+        clash_free = this.tableau_algorithm_non_empty_tbox_lazy_unfolding(this.root, null, this.L_x, root_node);
+        
+        if(this.draw_graph)
+            this.graph_drawer.save_graph(save_path);
         return clash_free;
     }
 }
