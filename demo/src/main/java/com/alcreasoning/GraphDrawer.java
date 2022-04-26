@@ -147,7 +147,7 @@ public class GraphDrawer {
         return child_node;
     }
 
-    private String return_set_as_string(HashSet<OWLObject> L_x, String set_name){
+    public String return_set_as_string(HashSet<OWLObject> L_x, String set_name){
         String ret_string = set_name + " = {";
         int i = 0;
         for(OWLObject obj : L_x){

@@ -6,6 +6,8 @@ import java.util.stream.Collectors;
 
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.ModelFactory;
+import org.apache.jena.rdf.model.Property;
+import org.apache.jena.rdf.model.Resource;
 import org.semanticweb.owlapi.model.IRI;
 import org.semanticweb.owlapi.model.OWLClass;
 import org.semanticweb.owlapi.model.OWLClassAssertionAxiom;
@@ -50,14 +52,12 @@ public class Reasoner {
     private OWLClassExpression Ĉ = null;
     private OWLNamedIndividual root;
     private LazyUnfoldingVisitor lazy_unfolding_v;
-    //Model graph;
-    //MutableGraph graph;
     private GraphDrawer graph_drawer;
     private Node last_parent;
     private Node last_child;
     private boolean draw_graph;
     private boolean can_draw_clash_free = false;
-
+    private Model rdf_model;
 
     private Reasoner(IRI ontology_iri, boolean draw_graph){
         this.factory = OntologyPreprocessor.concept_man.getOWLDataFactory();
@@ -68,6 +68,8 @@ public class Reasoner {
         this.return_visitor = new FunnyVisitor(true);
         this.graph_drawer = new GraphDrawer("ALC Tableaux");
         this.draw_graph = draw_graph;
+        if(this.draw_graph)
+            rdf_model = ModelFactory.createDefaultModel();
         //this.graph = ModelFactory.createDefaultModel();
     }
 
@@ -362,7 +364,7 @@ public class Reasoner {
         return child_node;
     }
 
-    public boolean tableau_algorithm_non_empty_tbox(OWLNamedIndividual x, HashSet<OWLObject> L_parent, HashSet<OWLObject> L_x, Node node){
+    public boolean tableau_algorithm_non_empty_tbox(OWLNamedIndividual x, HashSet<OWLObject> L_parent, HashSet<OWLObject> L_x, Node node, Resource node_rdf){
         HashSet<OWLClassExpression> disjointed;
         HashSet<OWLObjectSomeValuesFrom> owl_some_values_set;
         HashSet<OWLObjectAllValuesFrom> owl_all_values_set;
@@ -383,6 +385,10 @@ public class Reasoner {
 
         // Grafo: Aggiungo L_x al nodo dopo regola AND
         node = this.graph_drawer.add_L_x_to_node(node, L_x, x.getIRI().getShortForm());
+        // RDF
+        node_rdf.addProperty(this.rdf_model.createProperty(this.ontology_iri + "/#L_x"), this.graph_drawer.return_set_as_string(L_x, "L_" + x.getIRI().getShortForm()));
+
+
 
         added_joint = this.addall_axiom_to_abox(or_visitor.get_rule_set_and_reset(), x);
         
@@ -446,8 +452,11 @@ public class Reasoner {
                     
                     // Grafo
                     Node child_node = this.update_graph(true, node, x.getIRI().getShortForm(), null);
+                    // RDF
+                    Resource rdf_union_node = this.rdf_model.createResource();
+                    node_rdf.addProperty(this.rdf_model.createProperty(this.ontology_iri + "/#union"), rdf_union_node);
 
-                    clash_free = tableau_algorithm_non_empty_tbox(x, null, L_x, child_node);
+                    clash_free = tableau_algorithm_non_empty_tbox(x, null, L_x, child_node, rdf_union_node);
                     if(clash_free){
                         // Grafo
                         this.last_parent = child_node;
@@ -503,16 +512,18 @@ public class Reasoner {
 
             OWLClassExpression filler = obj.getFiller();
             OWLObjectPropertyExpression property = obj.getProperty();
-            boolean exists_rule_condition =
-                this.abox.stream()                                                                                      // exists R.C
-                    .filter(e -> e instanceof OWLObjectPropertyAssertionAxiom)                                          // Raccolgo tutte le relazioni
-                    .map(e -> (OWLObjectPropertyAssertionAxiom)e)                                                       // Cast    
-                    .filter(e -> e.getProperty().equals(property))                                                      // Filtro tutte le relazioni di tipo R    
-                    .filter(e -> e.getSubject().equals(x))                                                              // Filtro tutte le relazioni R da x a qualche z
-                    .filter(e -> !this.abox.contains(this.factory.getOWLClassAssertionAxiom(filler, e.getObject())))    // Filtro le relazioni tali che C(z)
-                    .count() == 0;
-
-            if(exists_rule_condition){
+            boolean exists_rule_condition[] = {false};
+            
+            this.abox.stream()                                                                                                                                      // exists R.C
+                    .filter(e -> e instanceof OWLObjectPropertyAssertionAxiom)                                                                                      // Raccolgo tutte le relazioni
+                    .map(e -> (OWLObjectPropertyAssertionAxiom)e)                                                                                                   // Cast    
+                    .filter(e -> e.getProperty().equals(property))                                                                                                  // Filtro tutte le relazioni di tipo R    
+                    .filter(e -> e.getSubject().equals(x))                                                                                                          // Filtro tutte le relazioni R da x a qualche z
+                    .forEach(e -> {if(this.abox.contains(this.factory.getOWLClassAssertionAxiom(filler, e.getObject()))){ exists_rule_condition[0] = true;} });     // Filtro le relazioni tali che C(z)
+                    //.filter(e -> !this.abox.contains(this.factory.getOWLClassAssertionAxiom(filler, e.getObject())))    // Filtro le relazioni tali che C(z)
+                    //.count() == 0;
+            
+            if(!exists_rule_condition[0]){
                 HashSet<OWLObject> added_axioms = new HashSet<>();
                 HashSet<OWLObject> L_child = new HashSet<>();                                                           // L_child rappresenta L(x')
                 OWLNamedIndividual child = create_individual();                                                         // Creo nuovo figlio child
@@ -547,10 +558,18 @@ public class Reasoner {
                                         added_axioms.add(this.instantiate_axiom(e.getFiller(), child));                 // cambiato x a child
                                   });
                 
+                System.out.println(node);
+                System.out.println(child.getIRI().getShortForm());
+                System.out.println(property);
                 // Grafo
                 Node child_node = this.update_graph(false, node, child.getIRI().getShortForm(), property);
+                // RDF
+                Resource rdf_child_node = this.rdf_model.createResource(child.getIRI().toString());
+                System.out.println(rdf_child_node);
+                property.accept(this.return_visitor);
+                node_rdf.addProperty(this.rdf_model.createProperty(this.ontology_iri + "/#" + this.return_visitor.get_and_destroy_return_string()), rdf_child_node);
 
-                clash_free = tableau_algorithm_non_empty_tbox(child, L_x, L_child, child_node);
+                clash_free = tableau_algorithm_non_empty_tbox(child, L_x, L_child, child_node, rdf_child_node);
 
                 if(!clash_free){
                     this.removeall_axiom_from_abox(added_axioms);
@@ -561,8 +580,8 @@ public class Reasoner {
                 }
                 
                 else{
-                    this.last_child = child_node;
-                    node = this.last_parent;
+                    node = child_node;
+                    node_rdf = rdf_child_node;
                 }
             }
         }
@@ -578,6 +597,7 @@ public class Reasoner {
             this.graph_drawer.add_child_clash_free_node(node);
         
         ///////////
+        System.out.println("Fine");
         return clash_free;
     }
 
@@ -828,10 +848,8 @@ public class Reasoner {
                     this.can_draw_clash_free = false;
                     //break;
                 }
-                else{
-                    this.last_child = child_node;
-                    node = this.last_parent;
-                }
+                else
+                    node = child_node;
             }
         }
         System.out.println("Fine chiamata nodo x_" + node_index);
@@ -851,18 +869,22 @@ public class Reasoner {
 
     public boolean check_consistency(String save_path){
         File dir = new File("./ProgettoIW/labels");
+        boolean clash_free = false;
         if(!dir.exists())
             dir.mkdir();
-        //Grafo
-        Node root_node = this.graph_drawer.create_new_node("x_0");
         
-        boolean clash_free;
+        if(this.draw_graph){
+            // Grafo
+            Node root_node = this.graph_drawer.create_new_node("x_0");
+            // RDF
+            Resource root_rdf = this.rdf_model.createResource(this.root.getIRI().toString());
 
-        System.out.println("Senza lazy unfolding:");
-        clash_free = this.tableau_algorithm_non_empty_tbox(this.root, null, this.L_x, root_node);
-
-        if(this.draw_graph)
+            System.out.println("Senza lazy unfolding:");
+            clash_free = this.tableau_algorithm_non_empty_tbox(this.root, null, this.L_x, root_node, root_rdf);
+            this.rdf_model.write(System.out);
             this.graph_drawer.save_graph(save_path);
+        }
+        // TODO: implementare else senza grafo
         return clash_free;
     }
 
