@@ -1,6 +1,7 @@
 package com.alcreasoning;
 import java.io.File;
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.stream.Collectors;
 
@@ -20,6 +21,7 @@ import org.semanticweb.owlapi.model.OWLObject;
 import org.semanticweb.owlapi.model.OWLObjectAllValuesFrom;
 import org.semanticweb.owlapi.model.OWLObjectComplementOf;
 import org.semanticweb.owlapi.model.OWLObjectIntersectionOf;
+import org.semanticweb.owlapi.model.OWLObjectProperty;
 import org.semanticweb.owlapi.model.OWLObjectPropertyAssertionAxiom;
 import org.semanticweb.owlapi.model.OWLObjectPropertyExpression;
 import org.semanticweb.owlapi.model.OWLObjectSomeValuesFrom;
@@ -58,6 +60,7 @@ public class Reasoner {
     private boolean draw_graph;
     private boolean can_draw_clash_free = false;
     private Model rdf_model;
+
 
     private Reasoner(IRI ontology_iri, boolean draw_graph){
         this.factory = OntologyPreprocessor.concept_man.getOWLDataFactory();
@@ -364,11 +367,16 @@ public class Reasoner {
         return child_node;
     }
 
+    private boolean check_bottom(OWLObjectPropertyExpression property, OWLClassExpression expr1, OWLClassExpression filler, HashMap<OWLObjectPropertyExpression, OWLClassExpression> properties_fillers){
+        return properties_fillers.containsKey(property) && properties_fillers.get(property).equals(expr1) && !filler.equals(expr1);
+    }
+
     public boolean tableau_algorithm_non_empty_tbox(OWLNamedIndividual x, HashSet<OWLObject> L_parent, HashSet<OWLObject> L_x, Node node, Resource node_rdf){
         HashSet<OWLClassExpression> disjointed;
         HashSet<OWLObjectSomeValuesFrom> owl_some_values_set;
         HashSet<OWLObjectAllValuesFrom> owl_all_values_set;
         HashSet<OWLObject> added_joint;  // ;)
+        HashMap<OWLObjectPropertyExpression, OWLClassExpression> properties_fillers = null;     // HashMap per conservare gli elementi <relazione, concetto>
         boolean clash_free = false;
         
         for(OWLObject obj : L_x){
@@ -503,6 +511,12 @@ public class Reasoner {
 
         // Per grafo
         int exists_processed = 0;
+        
+        
+        if(!owl_some_values_set.isEmpty()){
+            properties_fillers = new HashMap<>();
+        }
+
 
         for(OWLObjectSomeValuesFrom obj : owl_some_values_set){
             // Per grafo: Se sono arrivato all'ultimo esiste da valutare, allora posso iniziare a settare true can_draw_clash_free.
@@ -514,6 +528,23 @@ public class Reasoner {
             OWLObjectPropertyExpression property = obj.getProperty();
             boolean exists_rule_condition[] = {false};
             
+            // Se nel nodo attuale ho processato un Property some bottom, non puó esserci un altro figlio di relazione Property, 
+            // oppure se ho processato un Property some C non posso trovare un Property some bottom, quindi insoddisfacibile
+            if(this.check_bottom(property, this.factory.getOWLNothing(), filler, properties_fillers) || 
+               this.check_bottom(property, filler, this.factory.getOWLNothing(), properties_fillers)  
+              ){
+                // rimuovo congiunti dall'ABox
+                this.removeall_axiom_from_abox(added_joint);
+                // Grafo
+                this.graph_drawer.add_clash_node(node);
+                return false;
+            }
+
+            properties_fillers.put(property, filler);
+
+            if(filler.equals(this.factory.getOWLNothing()))
+                continue;                                          // Non creo un figlio se il filler è bottom
+
             this.abox.stream()                                                                                                                                      // exists R.C
                     .filter(e -> e instanceof OWLObjectPropertyAssertionAxiom)                                                                                      // Raccolgo tutte le relazioni
                     .map(e -> (OWLObjectPropertyAssertionAxiom)e)                                                                                                   // Cast    
@@ -546,6 +577,7 @@ public class Reasoner {
                         added_axioms.add(instantiated_axiom);
                 }
 
+                
                 L_child.add(filler);                                                                                    // L(x') U {C};
                                                                                                                         
                 
