@@ -127,6 +127,7 @@ public final class App {
             System.out.println("Errore parsing; Definire i concetti atomici, le relazioni, owl:Thing e owl:Nothing nella KB passata in input.");
             return;
         }
+        //concept.getValue().accept(v);
         preproc.set_concept(concept);
         
         System.out.println("\n\n\nLogical Axioms:\n");
@@ -163,7 +164,7 @@ public final class App {
         Reasoner r = new Reasoner(KB_and_Ĉ.getKey(), KB_and_Ĉ.getValue().getKey(), KB_and_Ĉ.getValue().getValue(), preproc.get_tbox_ontology_IRI(), true);
         
         Instant start = Instant.now();
-        System.out.println(r.check_consistency("./graphs/tableau.svg"));
+        System.out.println(r.check_consistency("./graphs/"));
         Instant end = Instant.now();
         System.out.println("\nElapsed Time: "+ Duration.between(start, end).toMillis()+"ms");
         

@@ -43,6 +43,9 @@ public class FunnyVisitor implements OWLObjectVisitor{
 	static final char not = '\u00AC';
 	static final char inclusion = '\u2291';
     static final char equiv = '\u2261';
+    static final char bottom = '\u23ca';
+    static final char top = '\u23ca';
+
 
     public FunnyVisitor(){
         regexp_for_names = "[^#]*#([a-zA-Z0-9_-]+)>$";
@@ -92,7 +95,7 @@ public class FunnyVisitor implements OWLObjectVisitor{
             operand.accept(this);
             if(i++ < expr_list.size()-1){
                 this.process_output(this.save_string, " ");
-                this.process_output(this.save_string, this.equiv);
+                this.process_output(this.save_string, equiv);
                 this.process_output(this.save_string, " ");
             }
         }           
@@ -100,7 +103,7 @@ public class FunnyVisitor implements OWLObjectVisitor{
 
     public void visit(OWLObjectSomeValuesFrom ce) {
         OWLObjectPropertyExpression p = ce.getProperty();
-        this.process_output(this.save_string, this.exists);
+        this.process_output(this.save_string, exists);
         Matcher m = r.matcher(p.toString());
         if(m.find()){
             this.process_output(this.save_string, m.group(1) + ".");
@@ -109,14 +112,19 @@ public class FunnyVisitor implements OWLObjectVisitor{
     }
 
     public void visit(OWLObjectComplementOf ce) {
-        this.process_output(this.save_string, this.not);
+        this.process_output(this.save_string, not);
         //this.process_output(this.save_string, "(");
         ce.getOperand().accept(this);
         //this.process_output(this.save_string, ")");
     }
 
     public void visit(OWLClass class_expr) {
-        this.process_output(this.save_string, class_expr.getIRI().getShortForm());
+        if(class_expr.getIRI().getShortForm().equals("Nothing"))
+            this.process_output(this.save_string, bottom);
+        else if(class_expr.getIRI().getShortForm().equals("Thing"))
+            this.process_output(this.save_string, top);
+        else
+            this.process_output(this.save_string, class_expr.getIRI().getShortForm());
     }
 
     public void visit(OWLNamedIndividual ind) {
@@ -133,7 +141,7 @@ public class FunnyVisitor implements OWLObjectVisitor{
             c.accept(this);
             if(++i < list_len){
                 this.process_output(this.save_string, " ");
-                this.process_output(this.save_string, this.intersect);
+                this.process_output(this.save_string, intersect);
                 this.process_output(this.save_string, " ");
             }
         }
@@ -147,7 +155,7 @@ public class FunnyVisitor implements OWLObjectVisitor{
             c.accept(this);
             if(++i < list_len){
                 this.process_output(this.save_string, " ");
-                this.process_output(this.save_string, this.union);
+                this.process_output(this.save_string, FunnyVisitor.union);
                 this.process_output(this.save_string, " ");
             }
         }
@@ -156,7 +164,7 @@ public class FunnyVisitor implements OWLObjectVisitor{
 
     public void visit(OWLObjectAllValuesFrom ce) {
         OWLObjectPropertyExpression p = ce.getProperty();
-        this.process_output(this.save_string, this.foreach);
+        this.process_output(this.save_string, foreach);
         Matcher m = r.matcher(p.toString());
         if (m.find()) {
             this.process_output(this.save_string, m.group(1) + ".");
@@ -196,7 +204,7 @@ public class FunnyVisitor implements OWLObjectVisitor{
 
     public void visit(OWLSubClassOfAxiom subclass){
         subclass.getSubClass().accept(this);
-        this.process_output(this.save_string, this.inclusion);
+        this.process_output(this.save_string, inclusion);
         subclass.getSuperClass().accept(this);
     }
 }

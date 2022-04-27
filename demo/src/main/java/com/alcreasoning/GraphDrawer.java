@@ -161,8 +161,15 @@ public class GraphDrawer {
 
     public void save_graph(String save_path){
         this.graph = graph("Tableau").directed().with(this.node_list);
+        int duplicate_index = 1;
+        String filename = "graph.svg";
+        Path path = Paths.get(save_path + "\\" + filename);
         try{
-            Graphviz.fromGraph(this.graph).width(500).render(Format.SVG).toFile(new File(save_path));
+            while(Files.exists(path)){
+                filename = "graph" + "_" + duplicate_index++ + ".svg";
+                path = Paths.get(filename);
+            }
+            Graphviz.fromGraph(this.graph).width(500).render(Format.SVG).toFile(new File(save_path + "\\" + filename));
         }
         catch(IOException ex){
             System.out.println("Errore");

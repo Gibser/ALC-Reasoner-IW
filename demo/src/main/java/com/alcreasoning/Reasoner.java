@@ -106,6 +106,9 @@ public class Reasoner {
         HashSet<OWLObject> atomic_concept = new HashSet<OWLObject>();
         HashSet<OWLObject> not_atomic_concept = new HashSet<OWLObject>();
 
+        if(L_x.contains(this.factory.getOWLNothing()))
+            return false;
+
         for(OWLObject obj : L_x){
             if(obj instanceof OWLClass){
                atomic_concept.add((OWLClass)obj);
