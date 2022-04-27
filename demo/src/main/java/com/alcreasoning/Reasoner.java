@@ -405,6 +405,8 @@ public class Reasoner {
             // rimuovo congiunti dall'ABox
             this.removeall_axiom_from_abox(added_joint);
             this.graph_drawer.add_clash_node(node);
+            //RDF
+            node_rdf.addProperty(this.rdf_model.createProperty(this.ontology_iri + "/#clash"), "CLASH");
             return false;
         }
         
@@ -498,6 +500,8 @@ public class Reasoner {
             this.removeall_axiom_from_abox(added_joint);
             // Grafo
             this.graph_drawer.add_clash_node(node);
+            //RDF
+            node_rdf.addProperty(this.rdf_model.createProperty(this.ontology_iri + "/#clash"), "CLASH");
             return false;
         }
 
@@ -537,6 +541,8 @@ public class Reasoner {
                 this.removeall_axiom_from_abox(added_joint);
                 // Grafo
                 this.graph_drawer.add_clash_node(node);
+                //RDF
+            node_rdf.addProperty(this.rdf_model.createProperty(this.ontology_iri + "/#clash"), "CLASH");
                 return false;
             }
 
@@ -620,7 +626,7 @@ public class Reasoner {
         System.out.println("Fine chiamata nodo " + x.getIRI().getShortForm());
         System.out.println("Clash free: " + clash_free);
         // Grafo
-        if(clash_free && owl_some_values_set.isEmpty() && this.can_draw_clash_free){
+        if(clash_free && this.can_draw_clash_free){//&& owl_some_values_set.isEmpty() ){
             this.graph_drawer.add_clash_free_node(node);
             this.can_draw_clash_free = false;
         }

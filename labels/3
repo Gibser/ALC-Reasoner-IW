@@ -1,1 +1,0 @@
-L_x_0 = {∃R.Nothing, (A ⊔ ∀R.Thing), ∃R.A, ((A ⊔ ∀R.Thing) ⊓ (¬A ⊔ ∃R.Nothing)), (¬A ⊔ ∃R.Nothing), ∀R.Thing}

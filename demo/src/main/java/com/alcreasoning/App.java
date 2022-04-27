@@ -2,6 +2,7 @@ package com.alcreasoning;
 
 import org.semanticweb.owlapi.apibinding.OWLManager;
 import org.semanticweb.owlapi.expression.ShortFormEntityChecker;
+import org.semanticweb.owlapi.manchestersyntax.renderer.ParserException;
 import org.semanticweb.owlapi.model.OWLAnnotationProperty;
 import org.semanticweb.owlapi.model.OWLAxiom;
 import org.semanticweb.owlapi.model.OWLClass;
@@ -39,6 +40,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
+
 
 import org.apache.jena.*;
 import org.apache.jena.rdf.model.Model;
@@ -117,9 +119,14 @@ public final class App {
         AtomicConceptVisitor n = new AtomicConceptVisitor();
 
         OntologyPreprocessor preproc = new OntologyPreprocessor("KB_12.owl");
-
-        Pair<OWLClass, OWLClassExpression> concept = get_concept_from_input(preproc);
-
+        Pair<OWLClass, OWLClassExpression> concept = null;
+        try{
+             concept = get_concept_from_input(preproc);
+        }
+        catch(ParserException e){
+            System.out.println("Errore parsing; Definire i concetti atomici, le relazioni, owl:Thing e owl:Nothing nella KB passata in input.");
+            return;
+        }
         preproc.set_concept(concept);
         
         System.out.println("\n\n\nLogical Axioms:\n");

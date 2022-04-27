@@ -22,3 +22,9 @@ Class: <http://www.semanticweb.org/gpepp/ontologies/2022/3/untitled-ontology-28#
 Class: <http://www.semanticweb.org/gpepp/ontologies/2022/3/untitled-ontology-28#D>
 
     
+Class: owl:Nothing
+
+    
+Class: owl:Thing
+
+    
