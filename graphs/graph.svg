@@ -1,0 +1,88 @@
+<svg width="500px" height="688px"
+ viewBox="0.00 0.00 168.00 231.00" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+<g id="graph0" class="graph" transform="scale(1.0 1.0) rotate(0.0) translate(4.0 227.0)">
+<title>Tableau</title>
+<polygon fill="white" stroke="transparent" points="-4,4 -4,-227 164,-227 164,4 -4,4"/>
+<!-- 0 -->
+<g id="node1" class="node">
+<title>0</title>
+<ellipse fill="none" stroke="black" cx="96" cy="-178" rx="27" ry="18"/>
+<text text-anchor="start" x="89" y="-175.3" font-family="Times New Roman,serif" font-size="14.00">x</text>
+<text text-anchor="start" x="96" y="-175.3" font-family="Times New Roman,serif" baseline-shift="sub" font-size="14.00">0</text>
+<g id="a_node1_0"><a xlink:href="file:///C:\Users\gpepp\Desktop\Universita\Magistrale\Intelligent Web\ProgettoIW\labels\1" xlink:title="x&lt;sub&gt;0&lt;/sub&gt;">
+<polygon fill="none" stroke="black" points="36,-196.5 36,-221.5 68,-221.5 68,-196.5 36,-196.5"/>
+<text text-anchor="start" x="41" y="-206.3" font-family="Times New Roman,serif" font-size="14.00">L</text>
+<text text-anchor="start" x="50" y="-206.3" font-family="Times New Roman,serif" baseline-shift="sub" font-size="14.00">x</text>
+<text text-anchor="start" x="56" y="-206.3" font-family="Times New Roman,serif" baseline-shift="sub" font-size="14.00">0</text>
+</a>
+</g>
+<polygon fill="none" stroke="black" points="35,-196 35,-223 69,-223 69,-196 35,-196"/>
+</g>
+<!-- 1 -->
+<g id="node2" class="node">
+<title>1</title>
+<ellipse fill="none" stroke="black" cx="61" cy="-91" rx="27" ry="18"/>
+<text text-anchor="start" x="54" y="-88.3" font-family="Times New Roman,serif" font-size="14.00">x</text>
+<text text-anchor="start" x="61" y="-88.3" font-family="Times New Roman,serif" baseline-shift="sub" font-size="14.00">0</text>
+<g id="a_node2_1"><a xlink:href="file:///C:\Users\gpepp\Desktop\Universita\Magistrale\Intelligent Web\ProgettoIW\labels\2" xlink:title="x&lt;sub&gt;0&lt;/sub&gt;">
+<polygon fill="none" stroke="black" points="1,-109.5 1,-134.5 33,-134.5 33,-109.5 1,-109.5"/>
+<text text-anchor="start" x="6" y="-119.3" font-family="Times New Roman,serif" font-size="14.00">L</text>
+<text text-anchor="start" x="15" y="-119.3" font-family="Times New Roman,serif" baseline-shift="sub" font-size="14.00">x</text>
+<text text-anchor="start" x="21" y="-119.3" font-family="Times New Roman,serif" baseline-shift="sub" font-size="14.00">0</text>
+</a>
+</g>
+<polygon fill="none" stroke="black" points="0,-109 0,-136 34,-136 34,-109 0,-109"/>
+</g>
+<!-- 0&#45;&gt;1 -->
+<g id="edge2" class="edge">
+<title>0&#45;&gt;1</title>
+<path fill="none" stroke="black" d="M89.09,-160.21C84.12,-148.14 77.32,-131.64 71.66,-117.89"/>
+<polygon fill="black" stroke="black" points="74.83,-116.38 67.78,-108.47 68.35,-119.05 74.83,-116.38"/>
+<text text-anchor="middle" x="90" y="-130.8" font-family="Times New Roman,serif" font-size="14.00">⊔</text>
+</g>
+<!-- 3 -->
+<g id="node4" class="node">
+<title>3</title>
+<ellipse fill="none" stroke="black" cx="133" cy="-91" rx="27" ry="18"/>
+<text text-anchor="start" x="126" y="-88.3" font-family="Times New Roman,serif" font-size="14.00">x</text>
+<text text-anchor="start" x="133" y="-88.3" font-family="Times New Roman,serif" baseline-shift="sub" font-size="14.00">0</text>
+<g id="a_node4_2"><a xlink:href="file:///C:\Users\gpepp\Desktop\Universita\Magistrale\Intelligent Web\ProgettoIW\labels\4" xlink:title="x&lt;sub&gt;0&lt;/sub&gt;">
+<polygon fill="none" stroke="black" points="73,-46.5 73,-71.5 105,-71.5 105,-46.5 73,-46.5"/>
+<text text-anchor="start" x="78" y="-56.3" font-family="Times New Roman,serif" font-size="14.00">L</text>
+<text text-anchor="start" x="87" y="-56.3" font-family="Times New Roman,serif" baseline-shift="sub" font-size="14.00">x</text>
+<text text-anchor="start" x="93" y="-56.3" font-family="Times New Roman,serif" baseline-shift="sub" font-size="14.00">0</text>
+</a>
+</g>
+<polygon fill="none" stroke="black" points="72,-46 72,-73 106,-73 106,-46 72,-46"/>
+</g>
+<!-- 0&#45;&gt;3 -->
+<g id="edge1" class="edge">
+<title>0&#45;&gt;3</title>
+<path fill="none" stroke="black" d="M103.13,-160.61C108.37,-148.58 115.6,-131.98 121.63,-118.13"/>
+<polygon fill="black" stroke="black" points="124.98,-119.19 125.76,-108.63 118.56,-116.4 124.98,-119.19"/>
+<text text-anchor="middle" x="125" y="-130.8" font-family="Times New Roman,serif" font-size="14.00">⊔</text>
+</g>
+<!-- 2 -->
+<g id="node3" class="node">
+<title>2</title>
+<text text-anchor="middle" x="61" y="-14.3" font-family="Times New Roman,serif" font-size="14.00" fill="#cc3300">✖</text>
+</g>
+<!-- 1&#45;&gt;2 -->
+<g id="edge3" class="edge">
+<title>1&#45;&gt;2</title>
+<path fill="none" stroke="black" d="M61,-72.81C61,-64.79 61,-55.05 61,-46.07"/>
+<polygon fill="black" stroke="black" points="64.5,-46.03 61,-36.03 57.5,-46.03 64.5,-46.03"/>
+</g>
+<!-- 4 -->
+<g id="node5" class="node">
+<title>4</title>
+<text text-anchor="middle" x="133" y="-14.3" font-family="Times New Roman,serif" font-size="14.00" fill="#cc3300">✖</text>
+</g>
+<!-- 3&#45;&gt;4 -->
+<g id="edge4" class="edge">
+<title>3&#45;&gt;4</title>
+<path fill="none" stroke="black" d="M133,-72.81C133,-64.79 133,-55.05 133,-46.07"/>
+<polygon fill="black" stroke="black" points="136.5,-46.03 133,-36.03 129.5,-46.03 136.5,-46.03"/>
+</g>
+</g>
+</svg>
