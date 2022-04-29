@@ -118,7 +118,7 @@ public final class App {
         OrAndPreprocessorVisitor p = new OrAndPreprocessorVisitor();
         AtomicConceptVisitor n = new AtomicConceptVisitor();
 
-        OntologyPreprocessor preproc = new OntologyPreprocessor("KB_12.owl");
+        OntologyPreprocessor preproc = new OntologyPreprocessor("KB_13.owl");
         Pair<OWLClass, OWLClassExpression> concept = null;
         try{
              concept = get_concept_from_input(preproc);
@@ -161,7 +161,7 @@ public final class App {
         System.out.println("}");
         //Pair<OWLClassExpression, Pair<HashSet<OWLObject>, HashSet<OWLObject>>> KB_and_Ĉ = preproc.preprocess_tbox_and_concept(partition.getKey());
         Pair<OWLClassExpression, Pair<HashSet<OWLObject>, HashSet<OWLObject>>> KB_and_Ĉ = preproc.preprocess_tbox_and_concept();
-        Reasoner r = new Reasoner(KB_and_Ĉ.getKey(), KB_and_Ĉ.getValue().getKey(), KB_and_Ĉ.getValue().getValue(), preproc.get_tbox_ontology_IRI(), false);
+        Reasoner r = new Reasoner(KB_and_Ĉ.getKey(), KB_and_Ĉ.getValue().getKey(), KB_and_Ĉ.getValue().getValue(), preproc.get_tbox_ontology_IRI(), true);
         
         System.out.println(r.check_consistency("./graphs/", false));
         

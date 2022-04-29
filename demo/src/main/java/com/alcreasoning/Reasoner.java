@@ -179,8 +179,8 @@ public class Reasoner {
         return this.abox.add(axm);
     }
 
-    private HashSet<OWLObject> addall_axiom_to_abox(HashSet<OWLObject> axms, OWLNamedIndividual x){
-        HashSet<OWLObject> added_items = new HashSet<>();
+    private HashSet<OWLClassAssertionAxiom> addall_axiom_to_abox(HashSet<? extends OWLObject> axms, OWLNamedIndividual x){
+        HashSet<OWLClassAssertionAxiom> added_items = new HashSet<>();
         for(OWLObject obj : axms){
             OWLClassAssertionAxiom inst_axm = this.factory.getOWLClassAssertionAxiom((OWLClassExpression) obj, x);
             if(this.abox.add(inst_axm))
@@ -189,10 +189,9 @@ public class Reasoner {
         return added_items;
     }
 
-    private void removeall_axiom_from_abox(HashSet<OWLObject> axms){
+    private void removeall_axiom_from_abox(HashSet<? extends OWLObject> axms){
         this.abox.removeAll(axms);
     }
-
 
     private OWLNamedIndividual create_individual(){
         return this.factory.getOWLNamedIndividual(IRI.create(this.ontology_iri+ "#x_" + ++this.node_index));
@@ -200,6 +199,14 @@ public class Reasoner {
 
     private boolean add_axiom_to_abox(OWLObjectPropertyExpression relation, OWLNamedIndividual x1, OWLNamedIndividual x2){
         return this.abox.add(this.instantiate_property_axiom(relation, x1, x2));
+    }
+
+    private HashSet<OWLClassAssertionAxiom> instantiateall_axiom(HashSet<OWLClassExpression> axms, OWLNamedIndividual x){
+        HashSet<OWLClassAssertionAxiom> instantiated_axms = new HashSet<>();
+        for(OWLClassExpression axm : axms){
+            instantiated_axms.add(this.instantiate_axiom(axm, x));
+        }
+        return instantiated_axms;
     }
 
     private OWLClassAssertionAxiom instantiate_axiom(OWLClassExpression axm, OWLNamedIndividual x){
@@ -211,7 +218,7 @@ public class Reasoner {
     }
 
     
-
+    /*
     public boolean tableau_algorithm(OWLNamedIndividual x, HashSet<OWLObject> L_x, int node_index){
         HashSet<OWLClassExpression> disjointed;
         HashSet<OWLObjectSomeValuesFrom> owl_some_values_set;
@@ -357,7 +364,7 @@ public class Reasoner {
         System.out.println("Clash free: " + clash_free);
         return clash_free;
     }
-
+    */
     private Node update_graph(boolean or_branch, Node node, String individual_name, OWLObjectPropertyExpression property){
         Node child_node = null;
         if(this.draw_graph){
@@ -380,7 +387,8 @@ public class Reasoner {
         HashSet<OWLClassExpression> disjointed;
         HashSet<OWLObjectSomeValuesFrom> owl_some_values_set;
         HashSet<OWLObjectAllValuesFrom> owl_all_values_set;
-        HashSet<OWLObject> added_joint;  // ;)
+        HashSet<OWLClassExpression> added_joint;  // ;)
+        HashSet<OWLClassAssertionAxiom> instantiated_added_joint;
         HashMap<OWLObjectPropertyExpression, OWLClassExpression> properties_fillers = null;     // HashMap per conservare gli elementi <relazione, concetto>
         boolean clash_free = false;
         
@@ -402,13 +410,16 @@ public class Reasoner {
         node_rdf.addProperty(this.rdf_model.createProperty(this.ontology_iri + "/#L_x"), this.graph_drawer.return_set_as_string(L_x, "L_" + x.getIRI().getShortForm()));
 
 
-
-        added_joint = this.addall_axiom_to_abox(or_visitor.get_rule_set_and_reset(), x);
+        added_joint = or_visitor.get_rule_set_and_reset();
+        instantiated_added_joint = this.instantiateall_axiom(added_joint, x);
+        //added_joint = this.addall_axiom_to_abox(or_visitor.get_rule_set_and_reset(), x);
         
         // TODO: Controllare effettivo tempo risparmiato senza stampe
         if(!this.check_not_clash(L_x)){
+            // rimuovo congiunti da L_x
+            L_x.removeAll(added_joint);
             // rimuovo congiunti dall'ABox
-            this.removeall_axiom_from_abox(added_joint);
+            this.removeall_axiom_from_abox(instantiated_added_joint);
             this.graph_drawer.add_clash_node(node);
             //RDF
             node_rdf.addProperty(this.rdf_model.createProperty(this.ontology_iri + "/#clash"), "CLASH");
@@ -501,8 +512,10 @@ public class Reasoner {
         }
         // Controllo se localmente ci sono clash
         if(!(clash_free = this.check_not_clash(L_x))){
+            // rimuovo congiunti da L_x
+            L_x.removeAll(added_joint);
             // rimuovo congiunti dall'ABox
-            this.removeall_axiom_from_abox(added_joint);
+            this.removeall_axiom_from_abox(instantiated_added_joint);
             // Grafo
             this.graph_drawer.add_clash_node(node);
             //RDF
@@ -542,8 +555,10 @@ public class Reasoner {
             if(this.check_bottom(property, this.factory.getOWLNothing(), filler, properties_fillers) || 
                this.check_bottom(property, filler, this.factory.getOWLNothing(), properties_fillers)  
               ){
+                // rimuovo congiunti da L_x
+                L_x.removeAll(added_joint);
                 // rimuovo congiunti dall'ABox
-                this.removeall_axiom_from_abox(added_joint);
+                this.removeall_axiom_from_abox(instantiated_added_joint);
                 // Grafo
                 this.graph_drawer.add_clash_node(node);
                 //RDF
@@ -611,6 +626,12 @@ public class Reasoner {
                 clash_free = tableau_algorithm_non_empty_tbox(child, L_x, L_child, child_node, rdf_child_node);
 
                 if(!clash_free){
+                    // Aggiunto per risolvere bug di disgiunti non rimossi dopo clash
+                    // rimuovo congiunti da L_x
+                    L_x.removeAll(added_joint);
+                    // rimuovo congiunti dall'ABox
+                    this.removeall_axiom_from_abox(instantiated_added_joint);
+
                     this.removeall_axiom_from_abox(added_axioms);
                     // Grafo
                     this.can_draw_clash_free = false;
@@ -645,7 +666,8 @@ public class Reasoner {
         HashSet<OWLClassExpression> disjointed;
         HashSet<OWLObjectSomeValuesFrom> owl_some_values_set;
         HashSet<OWLObjectAllValuesFrom> owl_all_values_set;
-        HashSet<OWLObject> added_joint;  // ;)
+        HashSet<OWLClassExpression> added_joint;  // ;)
+        HashSet<OWLClassAssertionAxiom> instantiated_added_joint;
         HashMap<OWLObjectPropertyExpression, OWLClassExpression> properties_fillers = null;     // HashMap per conservare gli elementi <relazione, concetto>
         boolean clash_free = false;
         
@@ -662,12 +684,15 @@ public class Reasoner {
         }
 
 
-        added_joint = this.addall_axiom_to_abox(or_visitor.get_rule_set_and_reset(), x);
+        added_joint = or_visitor.get_rule_set_and_reset();
+        instantiated_added_joint = this.instantiateall_axiom(added_joint, x);
         
 
         if(!this.check_not_clash(L_x)){
+            // rimuovo congiunti da L_x
+            L_x.removeAll(added_joint);
             // rimuovo congiunti dall'ABox
-            this.removeall_axiom_from_abox(added_joint);
+            this.removeall_axiom_from_abox(instantiated_added_joint);
             return false;
         }
         
@@ -720,8 +745,10 @@ public class Reasoner {
         }
         // Controllo se localmente ci sono clash
         if(!(clash_free = this.check_not_clash(L_x))){
+            // rimuovo congiunti da L_x
+            L_x.removeAll(added_joint);
             // rimuovo congiunti dall'ABox
-            this.removeall_axiom_from_abox(added_joint);
+            this.removeall_axiom_from_abox(instantiated_added_joint);
             return false;
         }
 
@@ -746,8 +773,10 @@ public class Reasoner {
             if(this.check_bottom(property, this.factory.getOWLNothing(), filler, properties_fillers) || 
                this.check_bottom(property, filler, this.factory.getOWLNothing(), properties_fillers)  
               ){
+                // rimuovo congiunti da L_x
+                L_x.removeAll(added_joint);
                 // rimuovo congiunti dall'ABox
-                this.removeall_axiom_from_abox(added_joint);
+                this.removeall_axiom_from_abox(instantiated_added_joint);
                 return false;
             }
 
@@ -811,8 +840,8 @@ public class Reasoner {
         return clash_free;
     }
 
-    private HashSet<OWLObject> lazy_unfolding_rules(HashSet<OWLObject> L_x){
-        HashSet<OWLObject> added_axioms = new HashSet<>();
+    private HashSet<OWLClassExpression> lazy_unfolding_rules(HashSet<OWLObject> L_x){
+        HashSet<OWLClassExpression> added_axioms = new HashSet<>();
         for(OWLLogicalAxiom ax : this.T_u){
             ax.accept(this.lazy_unfolding_v);
             OWLClass left_side = this.lazy_unfolding_v.get_left_side();
@@ -836,7 +865,7 @@ public class Reasoner {
         return L_parent == null ? false : L_parent.containsAll(L_x);
     }
 
-    private boolean contains_and(HashSet<OWLObject> added_lazy){
+    private boolean contains_and(HashSet<OWLClassExpression> added_lazy){
         for(OWLObject obj : added_lazy){
             if(obj instanceof OWLObjectIntersectionOf)
                 return true;
@@ -849,8 +878,9 @@ public class Reasoner {
         HashSet<OWLClassExpression> disjointed;
         HashSet<OWLObjectSomeValuesFrom> owl_some_values_set;
         HashSet<OWLObjectAllValuesFrom> owl_all_values_set;
-        HashSet<OWLObject> added_conj_lazy = new HashSet<>();  // ;)
-        HashSet<OWLObject> added_lazy = new HashSet<>();
+        HashSet<OWLClassExpression> added_conj_lazy = new HashSet<>();
+        HashSet<OWLClassAssertionAxiom> instantiated_added_conj_lazy = new HashSet<>();
+        HashSet<OWLClassExpression> added_lazy = new HashSet<>();
         boolean clash_free = false;
         boolean apply_lazy_unfolding = true;
         HashMap<OWLObjectPropertyExpression, OWLClassExpression> properties_fillers = null;     // HashMap per conservare gli elementi <relazione, concetto>
@@ -884,15 +914,18 @@ public class Reasoner {
         // RDF
         node_rdf.addProperty(this.rdf_model.createProperty(this.ontology_iri + "/#L_x"), this.graph_drawer.return_set_as_string(L_x, "L_" + x.getIRI().getShortForm()));
 
-        added_conj_lazy = this.addall_axiom_to_abox(added_conj_lazy, x);
-        added_conj_lazy.addAll(this.addall_axiom_to_abox(or_visitor.get_rule_set_and_reset(), x));
+        added_conj_lazy.addAll(or_visitor.get_rule_set_and_reset());
+        instantiated_added_conj_lazy = this.addall_axiom_to_abox(added_conj_lazy, x);
+        //instantiated_added_conj_lazy.addAll(this.addall_axiom_to_abox(or_visitor.get_rule_set_and_reset(), x));
         System.out.println("Dopo istanza");
 
 
         // TODO: Controllare effettivo tempo risparmiato senza stampe
         if(!this.check_not_clash(L_x)){
+            // rimuovo congiunti da L_x
+            L_x.removeAll(added_conj_lazy);
             // rimuovo congiunti dall'ABox
-            this.removeall_axiom_from_abox(added_conj_lazy);
+            this.removeall_axiom_from_abox(instantiated_added_conj_lazy);
             this.graph_drawer.add_clash_node(node);
             //RDF
             node_rdf.addProperty(this.rdf_model.createProperty(this.ontology_iri + "/#clash"), "CLASH");
@@ -981,6 +1014,8 @@ public class Reasoner {
         }
         // Controllo se localmente ci sono clash
         if(!(clash_free = this.check_not_clash(L_x))){
+            // rimuovo congiunti da L_x
+            L_x.removeAll(added_conj_lazy);
             // rimuovo congiunti e lazy dall'ABox
             this.removeall_axiom_from_abox(added_conj_lazy);
             // Grafo
@@ -1123,8 +1158,9 @@ public class Reasoner {
         HashSet<OWLClassExpression> disjointed;
         HashSet<OWLObjectSomeValuesFrom> owl_some_values_set;
         HashSet<OWLObjectAllValuesFrom> owl_all_values_set;
-        HashSet<OWLObject> added_conj_lazy = new HashSet<>();  // ;)
-        HashSet<OWLObject> added_lazy = new HashSet<>();
+        HashSet<OWLClassExpression> added_conj_lazy = new HashSet<>();
+        HashSet<OWLClassAssertionAxiom> instantiated_added_conj_lazy = new HashSet<>();
+        HashSet<OWLClassExpression> added_lazy = new HashSet<>();
         boolean clash_free = false;
         boolean apply_lazy_unfolding = true;
         HashMap<OWLObjectPropertyExpression, OWLClassExpression> properties_fillers = null;     // HashMap per conservare gli elementi <relazione, concetto>
@@ -1153,13 +1189,15 @@ public class Reasoner {
             return true;
         }
 
-        added_conj_lazy = this.addall_axiom_to_abox(added_conj_lazy, x);
-        added_conj_lazy.addAll(this.addall_axiom_to_abox(or_visitor.get_rule_set_and_reset(), x));
+        added_conj_lazy.addAll(or_visitor.get_rule_set_and_reset());
+        instantiated_added_conj_lazy = this.addall_axiom_to_abox(added_conj_lazy, x);
         System.out.println("Dopo istanza");
 
         if(!this.check_not_clash(L_x)){
+            // rimuovo congiunti da L_x
+            L_x.removeAll(added_conj_lazy);
             // rimuovo congiunti dall'ABox
-            this.removeall_axiom_from_abox(added_conj_lazy);
+            this.removeall_axiom_from_abox(instantiated_added_conj_lazy);
             return false;
         }
 
@@ -1213,8 +1251,10 @@ public class Reasoner {
         }
         // Controllo se localmente ci sono clash
         if(!(clash_free = this.check_not_clash(L_x))){
-            // rimuovo congiunti e lazy dall'ABox
-            this.removeall_axiom_from_abox(added_conj_lazy);
+            // rimuovo congiunti da L_x
+            L_x.removeAll(added_conj_lazy);
+            // rimuovo congiunti dall'ABox
+            this.removeall_axiom_from_abox(instantiated_added_conj_lazy);
             return false;
         }
 
@@ -1235,8 +1275,10 @@ public class Reasoner {
             if(this.check_bottom(property, this.factory.getOWLNothing(), filler, properties_fillers) || 
                this.check_bottom(property, filler, this.factory.getOWLNothing(), properties_fillers)  
               ){
+                // rimuovo congiunti da L_x
+                L_x.removeAll(added_conj_lazy);
                 // rimuovo congiunti dall'ABox
-                this.removeall_axiom_from_abox(added_conj_lazy);
+                this.removeall_axiom_from_abox(instantiated_added_conj_lazy);
                 return false;
             }
 
