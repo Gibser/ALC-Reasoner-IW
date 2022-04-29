@@ -85,7 +85,7 @@ public class Reasoner {
         this.add_axiom_to_abox(concept_name, root);
     }
 
-    public Reasoner(OWLClassExpression Ĉ, HashSet<OWLObject> KB_with_concept_name, HashSet<OWLObject> KB_with_concept, IRI ontology_iri, boolean draw_graph){
+    public Reasoner(OWLClassExpression Ĉ, HashSet<OWLClassExpression> KB_with_concept_name, HashSet<OWLClassExpression> KB_with_concept, IRI ontology_iri, boolean draw_graph){
         this(ontology_iri, draw_graph);
         this.L_x.addAll(KB_with_concept);
         this.root = this.create_individual();
@@ -93,7 +93,7 @@ public class Reasoner {
         this.Ĉ = Ĉ;
     }
 
-    public Reasoner(OWLClassExpression T_g, HashSet<OWLLogicalAxiom> T_u, HashSet<OWLObject> KB_with_concept_name, HashSet<OWLObject> KB_with_concept, IRI ontology_iri, boolean draw_graph){
+    public Reasoner(OWLClassExpression T_g, HashSet<OWLLogicalAxiom> T_u, HashSet<OWLClassExpression> KB_with_concept_name, HashSet<OWLClassExpression> KB_with_concept, IRI ontology_iri, boolean draw_graph){
         this(ontology_iri, draw_graph);
         this.L_x.addAll(KB_with_concept);
         this.root = this.create_individual();
@@ -179,12 +179,12 @@ public class Reasoner {
         return this.abox.add(axm);
     }
 
-    private HashSet<OWLClassAssertionAxiom> addall_axiom_to_abox(HashSet<? extends OWLObject> axms, OWLNamedIndividual x){
-        HashSet<OWLClassAssertionAxiom> added_items = new HashSet<>();
-        for(OWLObject obj : axms){
+    private HashSet<OWLClassExpression> addall_axiom_to_abox(HashSet<OWLClassExpression> axms, OWLNamedIndividual x){
+        HashSet<OWLClassExpression> added_items = new HashSet<>();
+        for(OWLClassExpression obj : axms){
             OWLClassAssertionAxiom inst_axm = this.factory.getOWLClassAssertionAxiom((OWLClassExpression) obj, x);
             if(this.abox.add(inst_axm))
-                added_items.add(inst_axm);
+                added_items.add(obj);
         }
         return added_items;
     }
@@ -410,7 +410,7 @@ public class Reasoner {
         node_rdf.addProperty(this.rdf_model.createProperty(this.ontology_iri + "/#L_x"), this.graph_drawer.return_set_as_string(L_x, "L_" + x.getIRI().getShortForm()));
 
 
-        added_joint = or_visitor.get_rule_set_and_reset();
+        added_joint = this.addall_axiom_to_abox(or_visitor.get_rule_set_and_reset(), x);
         instantiated_added_joint = this.instantiateall_axiom(added_joint, x);
         //added_joint = this.addall_axiom_to_abox(or_visitor.get_rule_set_and_reset(), x);
         
@@ -459,6 +459,7 @@ public class Reasoner {
             boolean is_present = false;
             for(OWLClassExpression disj : disjointed){
                 if(this.abox.contains(this.factory.getOWLClassAssertionAxiom((OWLClassExpression) disj, x))){
+                    System.out.println("Trovato");
                     is_present = true;
                     break;
                 }
@@ -477,15 +478,15 @@ public class Reasoner {
                     ////
                     
                     // Grafo
-                    Node child_node = this.update_graph(true, node, x.getIRI().getShortForm(), null);
+                    this.last_child = this.update_graph(true, node, x.getIRI().getShortForm(), null);
                     // RDF
                     Resource rdf_union_node = this.rdf_model.createResource();
                     node_rdf.addProperty(this.rdf_model.createProperty(this.ontology_iri + "/#union"), rdf_union_node);
 
-                    clash_free = tableau_algorithm_non_empty_tbox(x, null, L_x, child_node, rdf_union_node);
+                    clash_free = tableau_algorithm_non_empty_tbox(x, null, L_x, this.last_child, rdf_union_node);
                     if(clash_free){
                         // Grafo
-                        this.last_parent = child_node;
+                        this.last_parent = this.last_child;
                         //
                         break;
                     }
@@ -688,7 +689,7 @@ public class Reasoner {
         }
 
 
-        added_joint = or_visitor.get_rule_set_and_reset();
+        added_joint = this.addall_axiom_to_abox(or_visitor.get_rule_set_and_reset(), x);
         instantiated_added_joint = this.instantiateall_axiom(added_joint, x);
         
 
@@ -918,8 +919,8 @@ public class Reasoner {
         // RDF
         node_rdf.addProperty(this.rdf_model.createProperty(this.ontology_iri + "/#L_x"), this.graph_drawer.return_set_as_string(L_x, "L_" + x.getIRI().getShortForm()));
 
-        added_conj_lazy.addAll(or_visitor.get_rule_set_and_reset());
-        instantiated_added_conj_lazy = this.addall_axiom_to_abox(added_conj_lazy, x);
+        added_conj_lazy.addAll(this.addall_axiom_to_abox(or_visitor.get_rule_set_and_reset(), x));
+        instantiated_added_conj_lazy = this.instantiateall_axiom(added_conj_lazy, x);
         //instantiated_added_conj_lazy.addAll(this.addall_axiom_to_abox(or_visitor.get_rule_set_and_reset(), x));
         System.out.println("Dopo istanza");
 
@@ -1193,8 +1194,8 @@ public class Reasoner {
             return true;
         }
 
-        added_conj_lazy.addAll(or_visitor.get_rule_set_and_reset());
-        instantiated_added_conj_lazy = this.addall_axiom_to_abox(added_conj_lazy, x);
+        added_conj_lazy.addAll(this.addall_axiom_to_abox(or_visitor.get_rule_set_and_reset(), x));
+        instantiated_added_conj_lazy = this.instantiateall_axiom(added_conj_lazy, x);
         System.out.println("Dopo istanza");
 
         if(!this.check_not_clash(L_x)){
@@ -1381,6 +1382,7 @@ public class Reasoner {
         if(this.draw_graph){
             // Grafo
             Node root_node = this.graph_drawer.create_new_node("x_0");
+            this.last_child = root_node;
             // RDF
             Resource root_rdf = this.rdf_model.createResource(this.root.getIRI().toString());
 

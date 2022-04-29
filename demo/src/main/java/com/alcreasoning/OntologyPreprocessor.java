@@ -128,9 +128,9 @@ public class OntologyPreprocessor {
         return preprocessed_equivalence; 
     }
 
-    public Pair<HashSet<OWLObject>, HashSet<OWLObject>> preprocess_concept(){
-        HashSet<OWLObject> L_x = new HashSet<>();
-        HashSet<OWLObject> abox = new HashSet<>();
+    public Pair<HashSet<OWLClassExpression>, HashSet<OWLClassExpression>> preprocess_concept(){
+        HashSet<OWLClassExpression> L_x = new HashSet<>();
+        HashSet<OWLClassExpression> abox = new HashSet<>();
 
         //
         System.out.println("Concetto: ");
@@ -142,7 +142,7 @@ public class OntologyPreprocessor {
         abox.add(this.concept.getKey());
         L_x.add(this.concept.getValue());
         
-        return new Pair<HashSet<OWLObject>, HashSet<OWLObject>>(abox, L_x);
+        return new Pair<HashSet<OWLClassExpression>, HashSet<OWLClassExpression>>(abox, L_x);
     }
 
     private OWLClassExpression preprocess_tbox(){
@@ -193,21 +193,21 @@ public class OntologyPreprocessor {
         return conjunction;
     }
 
-    public Pair<OWLClassExpression, Pair<HashSet<OWLObject>, HashSet<OWLObject>>> preprocess_tbox_and_concept(){
-        Pair<HashSet<OWLObject>, HashSet<OWLObject>> KB = this.preprocess_concept();
+    public Pair<OWLClassExpression, Pair<HashSet<OWLClassExpression>, HashSet<OWLClassExpression>>> preprocess_tbox_and_concept(){
+        Pair<HashSet<OWLClassExpression>, HashSet<OWLClassExpression>> KB = this.preprocess_concept();
         OWLClassExpression Ĉ = this.preprocess_tbox();
         
         if(Ĉ != null){
             KB.getValue().add(Ĉ);
             KB.getKey().add(Ĉ);
         }
-        Pair<OWLClassExpression, Pair<HashSet<OWLObject>, HashSet<OWLObject>>> ret = new Pair<>(Ĉ, KB);
+        Pair<OWLClassExpression, Pair<HashSet<OWLClassExpression>, HashSet<OWLClassExpression>>> ret = new Pair<>(Ĉ, KB);
 
         return ret;
     }
 
-    public Pair<OWLClassExpression, Pair<HashSet<OWLObject>, HashSet<OWLObject>>> preprocess_tbox_and_concept(HashSet<OWLLogicalAxiom> T_g){
-        Pair<HashSet<OWLObject>, HashSet<OWLObject>> KB = this.preprocess_concept();
+    public Pair<OWLClassExpression, Pair<HashSet<OWLClassExpression>, HashSet<OWLClassExpression>>> preprocess_tbox_and_concept(HashSet<OWLLogicalAxiom> T_g){
+        Pair<HashSet<OWLClassExpression>, HashSet<OWLClassExpression>> KB = this.preprocess_concept();
         OWLClassExpression Ĉ = this.preprocess_tbox(T_g);
         
         if(Ĉ != null){
@@ -215,7 +215,7 @@ public class OntologyPreprocessor {
             KB.getKey().add(Ĉ);
         }
 
-        Pair<OWLClassExpression, Pair<HashSet<OWLObject>, HashSet<OWLObject>>> ret = new Pair<>(Ĉ, KB);
+        Pair<OWLClassExpression, Pair<HashSet<OWLClassExpression>, HashSet<OWLClassExpression>>> ret = new Pair<>(Ĉ, KB);
 
         return ret;
     }

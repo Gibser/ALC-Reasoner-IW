@@ -129,7 +129,7 @@ public final class App {
         }
         //concept.getValue().accept(v);
         preproc.set_concept(concept);
-        
+        System.out.println(concept);
         System.out.println("\n\n\nLogical Axioms:\n");
         
 
@@ -160,7 +160,7 @@ public final class App {
         partition.getValue().stream().forEach(e -> {e.accept(v); System.out.print(", ");});
         System.out.println("}");
         //Pair<OWLClassExpression, Pair<HashSet<OWLObject>, HashSet<OWLObject>>> KB_and_Ĉ = preproc.preprocess_tbox_and_concept(partition.getKey());
-        Pair<OWLClassExpression, Pair<HashSet<OWLObject>, HashSet<OWLObject>>> KB_and_Ĉ = preproc.preprocess_tbox_and_concept();
+        Pair<OWLClassExpression, Pair<HashSet<OWLClassExpression>, HashSet<OWLClassExpression>>> KB_and_Ĉ = preproc.preprocess_tbox_and_concept();
         Reasoner r = new Reasoner(KB_and_Ĉ.getKey(), KB_and_Ĉ.getValue().getKey(), KB_and_Ĉ.getValue().getValue(), preproc.get_tbox_ontology_IRI(), true);
         
         System.out.println(r.check_consistency("./graphs/", false));
