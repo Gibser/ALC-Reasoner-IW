@@ -562,7 +562,7 @@ public class Reasoner {
                 // Grafo
                 this.graph_drawer.add_clash_node(node);
                 //RDF
-            node_rdf.addProperty(this.rdf_model.createProperty(this.ontology_iri + "/#clash"), "CLASH");
+                node_rdf.addProperty(this.rdf_model.createProperty(this.ontology_iri + "/#clash"), "CLASH");
                 return false;
             }
 
@@ -617,13 +617,14 @@ public class Reasoner {
                                   });
                 
                 // Grafo
-                Node child_node = this.update_graph(false, node, child.getIRI().getShortForm(), property);
+                //Node child_node = this.update_graph(false, node, child.getIRI().getShortForm(), property);
+                this.last_child = this.update_graph(false, node, child.getIRI().getShortForm(), property);
                 // RDF
                 Resource rdf_child_node = this.rdf_model.createResource(child.getIRI().toString());
                 property.accept(this.return_visitor);
                 node_rdf.addProperty(this.rdf_model.createProperty(this.ontology_iri + "/#" + this.return_visitor.get_and_destroy_return_string()), rdf_child_node);
 
-                clash_free = tableau_algorithm_non_empty_tbox(child, L_x, L_child, child_node, rdf_child_node);
+                clash_free = tableau_algorithm_non_empty_tbox(child, L_x, L_child, this.last_child, rdf_child_node);
 
                 if(!clash_free){
                     // Aggiunto per risolvere bug di disgiunti non rimossi dopo clash
@@ -640,22 +641,25 @@ public class Reasoner {
                 }
                 
                 else{
-                    node = child_node;
+                    node = this.last_child;
                     node_rdf = rdf_child_node;
                 }
             }
         }
         System.out.println("Fine chiamata nodo " + x.getIRI().getShortForm());
         System.out.println("Clash free: " + clash_free);
+        /*
         // Grafo
         if(clash_free && this.can_draw_clash_free){//&& owl_some_values_set.isEmpty() ){
             this.graph_drawer.add_clash_free_node(node);
             this.can_draw_clash_free = false;
         }
-        // Se il nodo è clash free inserisco un nodo pallino verde
+        // Se il nodo è clash free inserisco solo il nodo generato (serve principalmente per far stampare il label)
         else if(clash_free && owl_some_values_set.isEmpty() && !this.can_draw_clash_free)
-            this.graph_drawer.add_child_clash_free_node(node);
-        
+            this.graph_drawer.add_new_child(node);
+            //this.graph_drawer.add_child_clash_free_node(node);
+        */
+        this.graph_drawer.add_new_child(node);
         ///////////
         System.out.println("Fine");
         return clash_free;
@@ -1384,6 +1388,7 @@ public class Reasoner {
             clash_free = this.tableau_algorithm_draw_graph(lazy_unfolding, root_node, root_rdf);
             end = Instant.now();
             this.rdf_model.write(System.out);
+            this.graph_drawer.add_clash_free_node(this.last_child);
             this.graph_drawer.save_graph(save_path);
         }
         else{

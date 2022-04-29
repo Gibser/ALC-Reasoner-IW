@@ -147,6 +147,10 @@ public class GraphDrawer {
         return child_node;
     }
 
+    public void add_new_child(Node child){
+        this.node_list.add(child);
+    }
+
     public String return_set_as_string(HashSet<OWLObject> L_x, String set_name){
         String ret_string = set_name + " = {";
         int i = 0;

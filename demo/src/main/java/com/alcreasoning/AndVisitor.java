@@ -2,10 +2,10 @@ package com.alcreasoning;
 
 import java.util.HashSet;
 
-import org.semanticweb.owlapi.model.OWLObjectVisitor;
 import org.semanticweb.owlapi.model.OWLClassExpression;
 import org.semanticweb.owlapi.model.OWLEquivalentClassesAxiom;
 import org.semanticweb.owlapi.model.OWLObjectIntersectionOf;
+import org.semanticweb.owlapi.model.OWLObjectVisitor;
 
 /**
     OWLObjectVisitor utilizzato per applicare la regola dell'AND nell'algoritmo del tableau
