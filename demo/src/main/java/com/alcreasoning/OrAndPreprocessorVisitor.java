@@ -171,7 +171,7 @@ public class OrAndPreprocessorVisitor implements OWLObjectVisitor{
     public void visit(OWLObjectAllValuesFrom ce) {
         OWLClassExpression filler = ce.getFiller();
         filler.accept(this);
-        ret_expr = this.factory.getOWLObjectSomeValuesFrom(ce.getProperty(), ret_expr);
+        ret_expr = this.factory.getOWLObjectAllValuesFrom(ce.getProperty(), ret_expr);
     }
 
     public OWLLogicalAxiom getLogicalAxiom(){

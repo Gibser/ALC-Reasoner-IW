@@ -1,176 +1,55 @@
-<svg width="500px" height="1488px"
- viewBox="0.00 0.00 168.00 500.20" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
-<g id="graph0" class="graph" transform="scale(1.0 1.0) rotate(0.0) translate(4.0 496.2)">
+<svg width="500px" height="760px"
+ viewBox="0.00 0.00 153.76 233.80" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+<g id="graph0" class="graph" transform="scale(1.0 1.0) rotate(0.0) translate(4.0 229.8)">
 <title>Tableau</title>
-<polygon fill="white" stroke="transparent" points="-4,4 -4,-496.2 164,-496.2 164,4 -4,4"/>
+<polygon fill="white" stroke="transparent" points="-4,4 -4,-229.8 149.76,-229.8 149.76,4 -4,4"/>
 <!-- 0 -->
 <g id="node1" class="node">
 <title>0</title>
-<ellipse fill="none" stroke="black" cx="97" cy="-446.2" rx="27" ry="18"/>
-<text text-anchor="start" x="90" y="-443" font-family="Times,serif" font-size="14.00">x</text>
-<text text-anchor="start" x="97" y="-443" font-family="Times,serif" baseline-shift="sub" font-size="14.00">0</text>
-<g id="a_node1_0"><a xlink:href="file:///H:\Università\Progetto IW\labels\1_16" xlink:title="x&lt;sub&gt;0&lt;/sub&gt;">
-<polygon fill="none" stroke="black" points="37,-465.2 37,-491.2 69,-491.2 69,-465.2 37,-465.2"/>
-<text text-anchor="start" x="41.72" y="-474.6" font-family="Times,serif" font-size="14.00">L</text>
-<text text-anchor="start" x="50.28" y="-474.6" font-family="Times,serif" baseline-shift="sub" font-size="14.00">x</text>
-<text text-anchor="start" x="57.28" y="-474.6" font-family="Times,serif" baseline-shift="sub" font-size="14.00">0</text>
+<ellipse fill="none" stroke="black" cx="61" cy="-179.8" rx="27" ry="18"/>
+<text text-anchor="start" x="54" y="-176.6" font-family="Times,serif" font-size="14.00">x</text>
+<text text-anchor="start" x="61" y="-176.6" font-family="Times,serif" baseline-shift="sub" font-size="14.00">0</text>
+<g id="a_node1_0"><a xlink:href="file:///H:\Università\Progetto IW\labels\1_52" xlink:title="x&lt;sub&gt;0&lt;/sub&gt;">
+<polygon fill="none" stroke="black" points="1,-198.8 1,-224.8 33,-224.8 33,-198.8 1,-198.8"/>
+<text text-anchor="start" x="5.72" y="-208.2" font-family="Times,serif" font-size="14.00">L</text>
+<text text-anchor="start" x="14.28" y="-208.2" font-family="Times,serif" baseline-shift="sub" font-size="14.00">x</text>
+<text text-anchor="start" x="21.28" y="-208.2" font-family="Times,serif" baseline-shift="sub" font-size="14.00">0</text>
 </a>
 </g>
-<polygon fill="none" stroke="black" points="36,-464.2 36,-492.2 70,-492.2 70,-464.2 36,-464.2"/>
+<polygon fill="none" stroke="black" points="0,-197.8 0,-225.8 34,-225.8 34,-197.8 0,-197.8"/>
 </g>
 <!-- 1 -->
 <g id="node2" class="node">
 <title>1</title>
-<ellipse fill="none" stroke="black" cx="61" cy="-357.4" rx="27" ry="18"/>
-<text text-anchor="start" x="54" y="-354.2" font-family="Times,serif" font-size="14.00">x</text>
-<text text-anchor="start" x="61" y="-354.2" font-family="Times,serif" baseline-shift="sub" font-size="14.00">0</text>
-<g id="a_node2_1"><a xlink:href="file:///H:\Università\Progetto IW\labels\2_15" xlink:title="x&lt;sub&gt;0&lt;/sub&gt;">
-<polygon fill="none" stroke="black" points="1,-376.4 1,-402.4 33,-402.4 33,-376.4 1,-376.4"/>
-<text text-anchor="start" x="5.72" y="-385.8" font-family="Times,serif" font-size="14.00">L</text>
-<text text-anchor="start" x="14.28" y="-385.8" font-family="Times,serif" baseline-shift="sub" font-size="14.00">x</text>
-<text text-anchor="start" x="21.28" y="-385.8" font-family="Times,serif" baseline-shift="sub" font-size="14.00">0</text>
+<ellipse fill="none" stroke="black" cx="61" cy="-91" rx="27" ry="18"/>
+<text text-anchor="start" x="54" y="-87.8" font-family="Times,serif" font-size="14.00">x</text>
+<text text-anchor="start" x="61" y="-87.8" font-family="Times,serif" baseline-shift="sub" font-size="14.00">1</text>
+<g id="a_node2_1"><a xlink:href="file:///H:\Università\Progetto IW\labels\2_36" xlink:title="x&lt;sub&gt;1&lt;/sub&gt;">
+<polygon fill="none" stroke="black" points="1,-110 1,-136 33,-136 33,-110 1,-110"/>
+<text text-anchor="start" x="5.72" y="-119.4" font-family="Times,serif" font-size="14.00">L</text>
+<text text-anchor="start" x="14.28" y="-119.4" font-family="Times,serif" baseline-shift="sub" font-size="14.00">x</text>
+<text text-anchor="start" x="21.28" y="-119.4" font-family="Times,serif" baseline-shift="sub" font-size="14.00">1</text>
 </a>
 </g>
-<polygon fill="none" stroke="black" points="0,-375.4 0,-403.4 34,-403.4 34,-375.4 0,-375.4"/>
+<polygon fill="none" stroke="black" points="0,-109 0,-137 34,-137 34,-109 0,-109"/>
 </g>
 <!-- 0&#45;&gt;1 -->
-<g id="edge2" class="edge">
-<title>0&#45;&gt;1</title>
-<path fill="none" stroke="black" d="M90.06,-428.46C84.88,-415.98 77.71,-398.68 71.78,-384.4"/>
-<polygon fill="black" stroke="black" points="74.98,-382.98 67.92,-375.08 68.52,-385.66 74.98,-382.98"/>
-<text text-anchor="middle" x="88.25" y="-397.6" font-family="Times,serif" font-size="14.00">⊔</text>
-</g>
-<!-- 4 -->
-<g id="node5" class="node">
-<title>4</title>
-<ellipse fill="none" stroke="black" cx="133" cy="-357.4" rx="27" ry="18"/>
-<text text-anchor="start" x="126" y="-354.2" font-family="Times,serif" font-size="14.00">x</text>
-<text text-anchor="start" x="133" y="-354.2" font-family="Times,serif" baseline-shift="sub" font-size="14.00">0</text>
-<g id="a_node5_2"><a xlink:href="file:///H:\Università\Progetto IW\labels\5_3" xlink:title="x&lt;sub&gt;0&lt;/sub&gt;">
-<polygon fill="none" stroke="black" points="73,-312.4 73,-338.4 105,-338.4 105,-312.4 73,-312.4"/>
-<text text-anchor="start" x="77.72" y="-321.8" font-family="Times,serif" font-size="14.00">L</text>
-<text text-anchor="start" x="86.28" y="-321.8" font-family="Times,serif" baseline-shift="sub" font-size="14.00">x</text>
-<text text-anchor="start" x="93.28" y="-321.8" font-family="Times,serif" baseline-shift="sub" font-size="14.00">0</text>
-</a>
-</g>
-<polygon fill="none" stroke="black" points="72,-311.4 72,-339.4 106,-339.4 106,-311.4 72,-311.4"/>
-</g>
-<!-- 0&#45;&gt;4 -->
 <g id="edge1" class="edge">
-<title>0&#45;&gt;4</title>
-<path fill="none" stroke="black" d="M103.94,-428.46C109.12,-415.98 116.29,-398.68 122.22,-384.4"/>
-<polygon fill="black" stroke="black" points="125.48,-385.66 126.08,-375.08 119.02,-382.98 125.48,-385.66"/>
-<text text-anchor="middle" x="123.25" y="-397.6" font-family="Times,serif" font-size="14.00">⊔</text>
+<title>0&#45;&gt;1</title>
+<path fill="none" stroke="black" d="M61,-161.65C61,-149.52 61,-133.02 61,-119.12"/>
+<polygon fill="black" stroke="black" points="64.5,-119.11 61,-109.11 57.5,-119.11 64.5,-119.11"/>
+<text text-anchor="middle" x="103.38" y="-131.2" font-family="Times,serif" font-size="14.00">haComponente</text>
 </g>
 <!-- 2 -->
 <g id="node3" class="node">
 <title>2</title>
-<ellipse fill="none" stroke="black" cx="61" cy="-268.6" rx="27" ry="18"/>
-<text text-anchor="start" x="54" y="-265.4" font-family="Times,serif" font-size="14.00">x</text>
-<text text-anchor="start" x="61" y="-265.4" font-family="Times,serif" baseline-shift="sub" font-size="14.00">1</text>
-<g id="a_node3_3"><a xlink:href="file:///H:\Università\Progetto IW\labels\3_2" xlink:title="x&lt;sub&gt;1&lt;/sub&gt;">
-<polygon fill="none" stroke="black" points="1,-287.6 1,-313.6 33,-313.6 33,-287.6 1,-287.6"/>
-<text text-anchor="start" x="5.72" y="-297" font-family="Times,serif" font-size="14.00">L</text>
-<text text-anchor="start" x="14.28" y="-297" font-family="Times,serif" baseline-shift="sub" font-size="14.00">x</text>
-<text text-anchor="start" x="21.28" y="-297" font-family="Times,serif" baseline-shift="sub" font-size="14.00">1</text>
-</a>
-</g>
-<polygon fill="none" stroke="black" points="0,-286.6 0,-314.6 34,-314.6 34,-286.6 0,-286.6"/>
+<text text-anchor="middle" x="61" y="-13.8" font-family="Times,serif" font-size="14.00" fill="#cc3300">✖</text>
 </g>
 <!-- 1&#45;&gt;2 -->
-<g id="edge3" class="edge">
+<g id="edge2" class="edge">
 <title>1&#45;&gt;2</title>
-<path fill="none" stroke="black" d="M61,-339.25C61,-327.12 61,-310.62 61,-296.72"/>
-<polygon fill="black" stroke="black" points="64.5,-296.71 61,-286.71 57.5,-296.71 64.5,-296.71"/>
-<text text-anchor="middle" x="65.67" y="-308.8" font-family="Times,serif" font-size="14.00">R</text>
-</g>
-<!-- 3 -->
-<g id="node4" class="node">
-<title>3</title>
-<text text-anchor="middle" x="61" y="-175.6" font-family="Times,serif" font-size="14.00" fill="#cc3300">✖</text>
-</g>
-<!-- 2&#45;&gt;3 -->
-<g id="edge4" class="edge">
-<title>2&#45;&gt;3</title>
-<path fill="none" stroke="black" d="M61,-250.45C61,-238.32 61,-221.82 61,-207.92"/>
-<polygon fill="black" stroke="black" points="64.5,-207.91 61,-197.91 57.5,-207.91 64.5,-207.91"/>
-</g>
-<!-- 5 -->
-<g id="node6" class="node">
-<title>5</title>
-<ellipse fill="none" stroke="black" cx="133" cy="-268.6" rx="27" ry="18"/>
-<text text-anchor="start" x="126" y="-265.4" font-family="Times,serif" font-size="14.00">x</text>
-<text text-anchor="start" x="133" y="-265.4" font-family="Times,serif" baseline-shift="sub" font-size="14.00">2</text>
-<g id="a_node6_4"><a xlink:href="file:///H:\Università\Progetto IW\labels\6_1" xlink:title="x&lt;sub&gt;2&lt;/sub&gt;">
-<polygon fill="none" stroke="black" points="73,-223.6 73,-249.6 105,-249.6 105,-223.6 73,-223.6"/>
-<text text-anchor="start" x="77.72" y="-233" font-family="Times,serif" font-size="14.00">L</text>
-<text text-anchor="start" x="86.28" y="-233" font-family="Times,serif" baseline-shift="sub" font-size="14.00">x</text>
-<text text-anchor="start" x="93.28" y="-233" font-family="Times,serif" baseline-shift="sub" font-size="14.00">2</text>
-</a>
-</g>
-<polygon fill="none" stroke="black" points="72,-222.6 72,-250.6 106,-250.6 106,-222.6 72,-222.6"/>
-</g>
-<!-- 4&#45;&gt;5 -->
-<g id="edge5" class="edge">
-<title>4&#45;&gt;5</title>
-<path fill="none" stroke="black" d="M133,-339.25C133,-327.12 133,-310.62 133,-296.72"/>
-<polygon fill="black" stroke="black" points="136.5,-296.71 133,-286.71 129.5,-296.71 136.5,-296.71"/>
-<text text-anchor="middle" x="137.67" y="-308.8" font-family="Times,serif" font-size="14.00">R</text>
-</g>
-<!-- 6 -->
-<g id="node7" class="node">
-<title>6</title>
-<ellipse fill="none" stroke="black" cx="133" cy="-179.8" rx="27" ry="18"/>
-<text text-anchor="start" x="126" y="-176.6" font-family="Times,serif" font-size="14.00">x</text>
-<text text-anchor="start" x="133" y="-176.6" font-family="Times,serif" baseline-shift="sub" font-size="14.00">3</text>
-<g id="a_node7_5"><a xlink:href="file:///H:\Università\Progetto IW\labels\7_2" xlink:title="x&lt;sub&gt;3&lt;/sub&gt;">
-<polygon fill="none" stroke="black" points="73,-134.8 73,-160.8 105,-160.8 105,-134.8 73,-134.8"/>
-<text text-anchor="start" x="77.72" y="-144.2" font-family="Times,serif" font-size="14.00">L</text>
-<text text-anchor="start" x="86.28" y="-144.2" font-family="Times,serif" baseline-shift="sub" font-size="14.00">x</text>
-<text text-anchor="start" x="93.28" y="-144.2" font-family="Times,serif" baseline-shift="sub" font-size="14.00">3</text>
-</a>
-</g>
-<polygon fill="none" stroke="black" points="72,-133.8 72,-161.8 106,-161.8 106,-133.8 72,-133.8"/>
-</g>
-<!-- 5&#45;&gt;6 -->
-<g id="edge6" class="edge">
-<title>5&#45;&gt;6</title>
-<path fill="none" stroke="black" d="M133,-250.45C133,-238.32 133,-221.82 133,-207.92"/>
-<polygon fill="black" stroke="black" points="136.5,-207.91 133,-197.91 129.5,-207.91 136.5,-207.91"/>
-<text text-anchor="middle" x="136.89" y="-220" font-family="Times,serif" font-size="14.00">S</text>
-</g>
-<!-- 7 -->
-<g id="node8" class="node">
-<title>7</title>
-<ellipse fill="none" stroke="black" cx="133" cy="-91" rx="27" ry="18"/>
-<text text-anchor="start" x="126" y="-87.8" font-family="Times,serif" font-size="14.00">x</text>
-<text text-anchor="start" x="133" y="-87.8" font-family="Times,serif" baseline-shift="sub" font-size="14.00">4</text>
-<g id="a_node8_6"><a xlink:href="file:///H:\Università\Progetto IW\labels\8_2" xlink:title="x&lt;sub&gt;4&lt;/sub&gt;">
-<polygon fill="none" stroke="black" points="73,-74 73,-100 105,-100 105,-74 73,-74"/>
-<text text-anchor="start" x="77.72" y="-83.4" font-family="Times,serif" font-size="14.00">L</text>
-<text text-anchor="start" x="86.28" y="-83.4" font-family="Times,serif" baseline-shift="sub" font-size="14.00">x</text>
-<text text-anchor="start" x="93.28" y="-83.4" font-family="Times,serif" baseline-shift="sub" font-size="14.00">4</text>
-</a>
-</g>
-<polygon fill="none" stroke="black" points="72,-73 72,-101 106,-101 106,-73 72,-73"/>
-</g>
-<!-- 6&#45;&gt;7 -->
-<g id="edge7" class="edge">
-<title>6&#45;&gt;7</title>
-<path fill="none" stroke="black" d="M133,-161.65C133,-149.52 133,-133.02 133,-119.12"/>
-<polygon fill="black" stroke="black" points="136.5,-119.11 133,-109.11 129.5,-119.11 136.5,-119.11"/>
-<text text-anchor="middle" x="136.89" y="-131.2" font-family="Times,serif" font-size="14.00">S</text>
-</g>
-<!-- 8 -->
-<g id="node9" class="node">
-<title>8</title>
-<text text-anchor="middle" x="133" y="-13.8" font-family="Times,serif" font-size="14.00" fill="#00cc00">✓</text>
-</g>
-<!-- 7&#45;&gt;8 -->
-<g id="edge8" class="edge">
-<title>7&#45;&gt;8</title>
-<path fill="none" stroke="black" d="M133,-72.81C133,-64.79 133,-55.05 133,-46.07"/>
-<polygon fill="black" stroke="black" points="136.5,-46.03 133,-36.03 129.5,-46.03 136.5,-46.03"/>
+<path fill="none" stroke="black" d="M61,-72.81C61,-64.79 61,-55.05 61,-46.07"/>
+<polygon fill="black" stroke="black" points="64.5,-46.03 61,-36.03 57.5,-46.03 64.5,-46.03"/>
 </g>
 </g>
 </svg>

@@ -15,6 +15,7 @@ import java.util.regex.Pattern;
 import org.semanticweb.owlapi.model.OWLClass;
 import org.semanticweb.owlapi.model.OWLClassAssertionAxiom;
 import org.semanticweb.owlapi.model.OWLClassExpression;
+import org.semanticweb.owlapi.model.OWLDisjointClassesAxiom;
 import org.semanticweb.owlapi.model.OWLEquivalentClassesAxiom;
 import org.semanticweb.owlapi.model.OWLNamedIndividual;
 import org.semanticweb.owlapi.model.OWLObjectAllValuesFrom;
@@ -117,6 +118,18 @@ public class FunnyVisitor implements OWLObjectVisitor{
         ce.getOperand().accept(this);
         //this.process_output(this.save_string, ")");
     }
+
+    public void visit(OWLDisjointClassesAxiom disj){
+        List<OWLClassExpression> expr_list = disj.getOperandsAsList();
+        int i = 0;
+        for(OWLClassExpression operand : expr_list){
+            operand.accept(this);
+            if(i++ < expr_list.size()-1){
+                this.process_output(this.save_string, " disjoint ");
+            }
+        }           
+    }
+
 
     public void visit(OWLClass class_expr) {
         if(class_expr.getIRI().getShortForm().equals("Nothing"))
