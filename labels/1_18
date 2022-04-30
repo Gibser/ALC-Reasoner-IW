@@ -1,1 +1,0 @@
-L_x_0 = {(Componente ⊔ ¬Manubrio), (Veicolo ⊔ ¬Auto), (Veicolo ⊔ ¬Bicicletta), ((Componente ⊔ ¬Manubrio) ⊓ (Componente ⊔ ¬Sterzo) ⊓ (Veicolo ⊔ ¬Auto) ⊓ (Veicolo ⊔ ¬Bicicletta) ⊓ (¬Auto ⊔ ∀haComponente.Sterzo) ⊓ (¬Bicicletta ⊔ ∀haComponente.Manubrio)), ¬Auto, (Componente ⊔ ¬Sterzo), (¬Bicicletta ⊔ ∀haComponente.Manubrio), (¬Auto ⊔ ∀haComponente.Sterzo), (Auto ⊓ ¬Auto), Auto}
