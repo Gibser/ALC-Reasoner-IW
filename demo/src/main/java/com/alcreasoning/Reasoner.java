@@ -1209,6 +1209,7 @@ public class Reasoner {
             added_conj_lazy.addAll(added_lazy);
             
             L_x.addAll(added_lazy);
+            // Valutare se inserire i concetti derivati con il modus ponens nell'ABox
             //this.addall_axiom_to_abox(added_lazy, x);
             
 
