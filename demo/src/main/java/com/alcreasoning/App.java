@@ -94,31 +94,37 @@ public final class App {
         return new Pair<OWLClass, OWLClassExpression>(c_name, class_exp);
     }
 
+    static Reasoner build_reasoner_for_tableau(boolean lazy_unfolding, OntologyPreprocessor preprocessor, boolean draw_graph){
+        FunnyVisitor v = new FunnyVisitor();
+        Reasoner r;
+        if(lazy_unfolding){
+            Pair<HashSet<OWLLogicalAxiom>, HashSet<OWLLogicalAxiom>> partition = preprocessor.partition_TBox();
+            System.out.print("\nT_g = {");
+            partition.getKey().stream().forEach(e -> {e.accept(v); System.out.print(", ");});
+            System.out.println("}");
+            System.out.print("T_u = {");
+            partition.getValue().stream().forEach(e -> {e.accept(v); System.out.print(", ");});
+            System.out.println("}");
+            Pair<OWLClassExpression, Pair<HashSet<OWLClassExpression>, HashSet<OWLClassExpression>>> KB_and_Ĉ = preprocessor.preprocess_tbox_and_concept(partition.getKey());
+            r = new Reasoner(KB_and_Ĉ.getKey(), partition.getValue(), KB_and_Ĉ.getValue().getKey(), KB_and_Ĉ.getValue().getValue(), preprocessor.get_tbox_ontology_IRI(), draw_graph);
+        }
+        else{
+            preprocessor.preprocess_and_or_tbox();
+            Pair<OWLClassExpression, Pair<HashSet<OWLClassExpression>, HashSet<OWLClassExpression>>> KB_and_Ĉ = preprocessor.preprocess_tbox_and_concept();
+            r = new Reasoner(KB_and_Ĉ.getKey(), KB_and_Ĉ.getValue().getKey(), KB_and_Ĉ.getValue().getValue(), preprocessor.get_tbox_ontology_IRI(), draw_graph);
+        }
+
+        return r;
+    }
+
     public static void main(String[] args) {
-        /*
-        // some definitions
-        String personURI    = "http://somewhere/JohnSmith";
-        String fullName     = "John Smith";
-
-        // create an empty Model
-        Model model = ModelFactory.createDefaultModel();
-
-        // create the resource
-        Resource johnSmith = model.createResource(personURI);
-
-        // add the property
-        johnSmith.addProperty(VCARD.FN, fullName);
-        
-        model.write(System.out);
-
-        */
 
         ///////nord
         FunnyVisitor v = new FunnyVisitor();
         OrAndPreprocessorVisitor p = new OrAndPreprocessorVisitor();
         AtomicConceptVisitor n = new AtomicConceptVisitor();
 
-        OntologyPreprocessor preproc = new OntologyPreprocessor("veicolo.owl");
+        OntologyPreprocessor preproc = new OntologyPreprocessor("veicolo_pep.owl");
         Pair<OWLClass, OWLClassExpression> concept = null;
         try{
              concept = get_concept_from_input(preproc);
@@ -127,43 +133,19 @@ public final class App {
             System.out.println("Errore parsing; Definire i concetti atomici, le relazioni, owl:Thing e owl:Nothing nella KB passata in input.");
             return;
         }
-        //concept.getValue().accept(v);
+
         preproc.set_concept(concept);
-        System.out.println(concept);
         System.out.println("\n\n\nLogical Axioms:\n");
         
-
         for(OWLAxiom ax : preproc.getTBox().getLogicalAxioms()){
             System.out.print("Assioma: ");
             ax.getNNF().accept(v);
             System.out.println();
-            /*
-            System.out.print("\nPreprocessing: ");
-            ax.getNNF().accept(p);
-            p.getLogicalAxiom().accept(v);
-            System.out.println("\n\n");
-            System.out.print("\nLeft side = {");
-            p.getLogicalAxiom().accept(n);
-            n.get_left_side_concepts_and_clear().stream().forEach(e -> {e.accept(v); System.out.print(", ");});
-            System.out.println("}");
-            System.out.print("Right side = {");
-            n.get_right_side_concepts_and_clear().stream().forEach(e -> {e.accept(v); System.out.print(", ");});
-            System.out.println("}");
-            */
         }
-        System.out.println(System.getProperty("user.dir"));
-        Pair<HashSet<OWLLogicalAxiom>, HashSet<OWLLogicalAxiom>> partition = preproc.partition_TBox();
-        System.out.print("\nT_g = {");
-        partition.getKey().stream().forEach(e -> {e.accept(v); System.out.print(", ");});
-        System.out.println("}");
-        System.out.print("T_u = {");
-        partition.getValue().stream().forEach(e -> {e.accept(v); System.out.print(", ");});
-        System.out.println("}");
-        //Pair<OWLClassExpression, Pair<HashSet<OWLObject>, HashSet<OWLObject>>> KB_and_Ĉ = preproc.preprocess_tbox_and_concept(partition.getKey());
-        Pair<OWLClassExpression, Pair<HashSet<OWLClassExpression>, HashSet<OWLClassExpression>>> KB_and_Ĉ = preproc.preprocess_tbox_and_concept(partition.getKey());
-        Reasoner r = new Reasoner(KB_and_Ĉ.getKey(), partition.getValue(), KB_and_Ĉ.getValue().getKey(), KB_and_Ĉ.getValue().getValue(), preproc.get_tbox_ontology_IRI(), true);
+    
+        Reasoner r = build_reasoner_for_tableau(false, preproc, true);
         
-        System.out.println(r.check_consistency("./graphs/", true));
+        System.out.println(r.check_consistency("./graphs/", false));
         
     }
 

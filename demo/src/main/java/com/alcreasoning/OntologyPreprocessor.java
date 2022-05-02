@@ -18,6 +18,10 @@ import org.semanticweb.owlapi.model.OWLDisjointClassesAxiom;
 import org.semanticweb.owlapi.model.OWLEquivalentClassesAxiom;
 import org.semanticweb.owlapi.model.OWLLogicalAxiom;
 import org.semanticweb.owlapi.model.OWLObject;
+import org.semanticweb.owlapi.model.OWLObjectAllValuesFrom;
+import org.semanticweb.owlapi.model.OWLObjectPropertyDomainAxiom;
+import org.semanticweb.owlapi.model.OWLObjectPropertyRangeAxiom;
+import org.semanticweb.owlapi.model.OWLObjectSomeValuesFrom;
 import org.semanticweb.owlapi.model.OWLObjectUnionOf;
 import org.semanticweb.owlapi.model.OWLObjectVisitor;
 import org.semanticweb.owlapi.model.OWLOntology;
@@ -137,10 +141,11 @@ public class OntologyPreprocessor {
         HashSet<OWLClassExpression> abox = new HashSet<>();
 
         //
-        System.out.println("Concetto: ");
+        System.out.print("Concetto: ");
         this.concept.getKey().accept(this.v);
-        System.out.println(" equivalent to ");
+        System.out.print(" equivalent to ");
         this.concept.getValue().accept(this.v);
+        System.out.println();
         //
 
         abox.add(this.concept.getKey());
@@ -152,7 +157,7 @@ public class OntologyPreprocessor {
         HashSet<OWLClassExpression> preprocessed_tbox = new HashSet<>();
         OWLClassExpression conjunction = null;
 
-        for(OWLLogicalAxiom ax : this.tbox.getLogicalAxioms()){
+        for(OWLLogicalAxiom ax : this.tbox_set){
             ///
             System.out.print("TBox: ");
             ax.getNNF().accept(v);
@@ -162,16 +167,6 @@ public class OntologyPreprocessor {
                 preprocessed_tbox.add(preprocess_subclassof((OWLSubClassOfAxiom)ax.getNNF()));
             else if(ax instanceof OWLEquivalentClassesAxiom)
                 preprocessed_tbox.addAll(this.preprocess_equivalence((OWLEquivalentClassesAxiom)ax.getNNF()));
-            else if(ax instanceof OWLDisjointClassesAxiom)
-                // Con inclusioni pairwise
-                
-                for(OWLDisjointClassesAxiom ex : ((OWLDisjointClassesAxiom)ax).asPairwiseAxioms()){
-                    this.factory.getOWLSubClassOfAxiom(ex.getOperandsAsList().get(0), this.factory.getOWLObjectComplementOf(ex.getOperandsAsList().get(1))).accept(this.v);
-                    System.out.println();
-                    preprocessed_tbox.add(this.preprocess_subclassof(this.factory.getOWLSubClassOfAxiom(ex.getOperandsAsList().get(0), this.factory.getOWLObjectComplementOf(ex.getOperandsAsList().get(1)))));
-                }
-                
-                //preprocessed_tbox.add(this.preprocess_disjointness((OWLDisjointClassesAxiom)ax.getNNF()));
         }
         if(preprocessed_tbox.size() > 1)
             conjunction = this.factory.getOWLObjectIntersectionOf(preprocessed_tbox);
@@ -183,7 +178,7 @@ public class OntologyPreprocessor {
     private HashSet<OWLLogicalAxiom> convert_disjointness(OWLDisjointClassesAxiom disj){
         HashSet<OWLLogicalAxiom> preprocessed_disj = new HashSet<>();
         for(OWLDisjointClassesAxiom ex : ((OWLDisjointClassesAxiom)disj).asPairwiseAxioms()){
-            preprocessed_disj.add(this.factory.getOWLSubClassOfAxiom(ex.getOperandsAsList().get(0), this.factory.getOWLObjectComplementOf(ex.getOperandsAsList().get(1))));
+            preprocessed_disj.add(this.factory.getOWLSubClassOfAxiom(ex.getOperandsAsList().get(0), ex.getOperandsAsList().get(1).getComplementNNF()));
         }
         return preprocessed_disj;
     }
@@ -208,6 +203,7 @@ public class OntologyPreprocessor {
                 preprocessed_tbox.add(preprocess_subclassof((OWLSubClassOfAxiom)ax.getNNF()));
             else if(ax instanceof OWLEquivalentClassesAxiom)
                 preprocessed_tbox.addAll(this.preprocess_equivalence((OWLEquivalentClassesAxiom)ax.getNNF()));
+            /*
             else if(ax instanceof OWLDisjointClassesAxiom)
                 // Con inclusioni pairwise
                 for(OWLDisjointClassesAxiom ex : ((OWLDisjointClassesAxiom)ax).asPairwiseAxioms()){
@@ -215,6 +211,7 @@ public class OntologyPreprocessor {
                     System.out.println();
                     preprocessed_tbox.add(this.preprocess_subclassof(this.factory.getOWLSubClassOfAxiom(ex.getOperandsAsList().get(0), this.factory.getOWLObjectComplementOf(ex.getOperandsAsList().get(1)))));
                 }
+            */
         }
         if(preprocessed_tbox.size() > 1)
             conjunction = this.factory.getOWLObjectIntersectionOf(preprocessed_tbox);
@@ -244,7 +241,6 @@ public class OntologyPreprocessor {
 
     public Pair<OWLClassExpression, Pair<HashSet<OWLClassExpression>, HashSet<OWLClassExpression>>> preprocess_tbox_and_concept(HashSet<OWLLogicalAxiom> T_g){
         Pair<HashSet<OWLClassExpression>, HashSet<OWLClassExpression>> KB = this.preprocess_concept();
-        System.out.println("Entro");
         OWLClassExpression Ĉ = this.preprocess_tbox(T_g);
         
         if(Ĉ != null){
@@ -257,16 +253,29 @@ public class OntologyPreprocessor {
         return ret;
     }
 
-    private void preprocess_and_or_tbox(){
+    public void preprocess_and_or_tbox(){
         for(OWLLogicalAxiom axm : this.tbox.getLogicalAxioms()){
-            axm.getNNF().accept(this.or_and_preproc_visitor);
-            this.tbox_set.add(this.or_and_preproc_visitor.getLogicalAxiom());
+            if(axm instanceof OWLDisjointClassesAxiom)
+                this.convert_disjointness((OWLDisjointClassesAxiom)axm).stream()
+                                    .forEach(disj_axm -> {disj_axm.accept(this.or_and_preproc_visitor);
+                                                          this.tbox_set.add(this.or_and_preproc_visitor.getLogicalAxiom());
+                                                         });
+            else if(axm instanceof OWLObjectPropertyDomainAxiom){
+                OWLObjectSomeValuesFrom expr = this.factory.getOWLObjectSomeValuesFrom(((OWLObjectPropertyDomainAxiom)axm).getProperty(), this.factory.getOWLNothing());
+                OWLSubClassOfAxiom processed_domain_axiom = this.factory.getOWLSubClassOfAxiom(expr, ((OWLObjectPropertyDomainAxiom)axm).getDomain());
+                this.tbox_set.add(processed_domain_axiom);
+            }
+            else if(axm instanceof OWLObjectPropertyRangeAxiom){
+                OWLObjectAllValuesFrom expr = this.factory.getOWLObjectAllValuesFrom(((OWLObjectPropertyRangeAxiom)axm).getProperty(), ((OWLObjectPropertyRangeAxiom)axm).getRange());
+                OWLSubClassOfAxiom processed_range_axiom = this.factory.getOWLSubClassOfAxiom(this.factory.getOWLThing(), expr);
+                this.tbox_set.add(processed_range_axiom);
+            }
+            else{
+                axm.getNNF().accept(this.or_and_preproc_visitor);
+                this.tbox_set.add(this.or_and_preproc_visitor.getLogicalAxiom());
+            }
+            
         }
-        // Non serve controllare le dipendenze cicliche sugli assiomi Disjoint, quindi li aggiungo a tbox_set direttamente
-        this.tbox.getLogicalAxioms().stream()
-                                    .filter(e -> e instanceof OWLDisjointClassesAxiom)
-                                    .map(e -> (OWLDisjointClassesAxiom) e)
-                                    .forEach(e -> this.tbox_set.addAll(this.convert_disjointness(e)));
     }
 
     private OWLClass get_atomic_left_side(OWLLogicalAxiom axm){
@@ -279,6 +288,11 @@ public class OntologyPreprocessor {
             return (OWLClass)((OWLSubClassOfAxiom)axm).getSubClass();
         else
             return null;
+    }
+
+    private HashSet<OWLClass> get_right_side(OWLLogicalAxiom axm){
+        axm.accept(this.atomic_visitor);
+        return this.atomic_visitor.get_right_side_concepts_and_clear();
     }
 
     private boolean is_left_side_atomic(OWLLogicalAxiom axm){
@@ -345,8 +359,11 @@ public class OntologyPreprocessor {
                     this.is_axiom_acyclic(axm)                                                       &&
                     this.is_class_not_in_left_side(this.get_atomic_left_side(axm), left_side_T_u)    &&
                     this.is_T_u_graph_acyclic(axm, left_side_T_u, right_side_T_u)                        
-                  )
+                  ){
                     T_u.add(axm);
+                    left_side_T_u.add(this.get_atomic_left_side(axm));
+                    right_side_T_u.addAll(this.get_right_side(axm));
+                   }
                 else
                     T_g.add(axm);
             }

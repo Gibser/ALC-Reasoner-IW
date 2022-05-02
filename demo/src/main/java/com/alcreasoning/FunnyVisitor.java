@@ -23,7 +23,9 @@ import org.semanticweb.owlapi.model.OWLObjectComplementOf;
 import org.semanticweb.owlapi.model.OWLObjectIntersectionOf;
 import org.semanticweb.owlapi.model.OWLObjectProperty;
 import org.semanticweb.owlapi.model.OWLObjectPropertyAssertionAxiom;
+import org.semanticweb.owlapi.model.OWLObjectPropertyDomainAxiom;
 import org.semanticweb.owlapi.model.OWLObjectPropertyExpression;
+import org.semanticweb.owlapi.model.OWLObjectPropertyRangeAxiom;
 import org.semanticweb.owlapi.model.OWLObjectSomeValuesFrom;
 import org.semanticweb.owlapi.model.OWLObjectUnionOf;
 
@@ -87,6 +89,18 @@ public class FunnyVisitor implements OWLObjectVisitor{
         String tmp = new String(this.return_string);
         this.return_string = "";
         return tmp;
+    }
+
+    public void visit(OWLObjectPropertyDomainAxiom ax){
+        ax.getProperty().accept(this);
+        this.process_output(this.save_string, " domain: ");
+        ax.getDomain().accept(this);
+    }
+
+    public void visit(OWLObjectPropertyRangeAxiom ax){
+        ax.getProperty().accept(this);
+        this.process_output(this.save_string, " range: ");
+        ax.getRange().accept(this);
     }
 
     public void visit(OWLEquivalentClassesAxiom ax) {

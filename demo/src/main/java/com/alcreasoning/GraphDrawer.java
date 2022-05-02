@@ -43,7 +43,6 @@ public class GraphDrawer {
 
     private String write_L_x_to_file(HashSet<OWLObject> L_x, String individual_name){
         String L_x_string = this.return_set_as_string(L_x, "L_" + individual_name);
-        //TODO: Creare cartella se non esiste
         String folder = "labels\\";
         String filename = "" + this.graphviz_node_id;
         int duplicate_index = 1;
@@ -53,18 +52,10 @@ public class GraphDrawer {
             filename = "" + this.graphviz_node_id + "_" + duplicate_index++;
             path = Paths.get(folder + filename);
         }
-        System.out.println(filename);
-        File L_x_file = new File(folder, filename);
-
         try{
-            //System.out.println("Sono qui");
-            //L_x_file.createNewFile();
             try (BufferedWriter wr = Files.newBufferedWriter(path, StandardCharsets.UTF_8)) {
                 wr.write(L_x_string);
             }
-            //FileWriter writer = new FileWriter(L_x_file);
-            //writer.write(L_x_string);
-            //writer.close();
         }
         catch(IOException e){
             System.out.println("Errore");
@@ -75,7 +66,6 @@ public class GraphDrawer {
     }
 
     public Node create_new_node(HashSet<OWLObject> L_x, String individual_name){
-        //String L_x_string = this.return_set_as_string(L_x, "L_"+individual_name);
         System.out.println("Nodo: " + this.graphviz_node_id);
         String file_path = this.write_L_x_to_file(L_x, individual_name);
         //String html = "<table border='0'><tr><td><a href=\"file:///" + System.getProperty("user.dir") + "\\" + file_path + "\">L_" + individual_name + "</a></td></tr></table>";
@@ -170,8 +160,8 @@ public class GraphDrawer {
         Path path = Paths.get(save_path + "\\" + filename);
         try{
             while(Files.exists(path)){
-                filename = "graph" + "_" + duplicate_index++ + ".svg";
-                path = Paths.get(filename);
+                filename = "graph" + "_" + ++duplicate_index + ".svg";
+                path = Paths.get(save_path + "\\" + filename);
             }
             Graphviz.fromGraph(this.graph).width(500).render(Format.SVG).toFile(new File(save_path + "\\" + filename));
         }

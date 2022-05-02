@@ -84,15 +84,13 @@ public class AtomicConceptVisitor implements OWLObjectVisitor{
     }
 
     public HashSet<OWLClass> get_left_side_concepts_and_clear(){
-        HashSet<OWLClass> temp;
-        temp = (HashSet<OWLClass>)this.left_side_concepts.clone();
+        HashSet<OWLClass> temp = new HashSet<>(this.left_side_concepts);
         this.left_side_concepts.clear();
         return temp;
     }
 
     public HashSet<OWLClass> get_right_side_concepts_and_clear(){
-        HashSet<OWLClass> temp;
-        temp = (HashSet<OWLClass>)this.right_side_concepts.clone();
+        HashSet<OWLClass> temp = new HashSet<>(this.right_side_concepts);
         this.right_side_concepts.clear();
         return temp;
     }
