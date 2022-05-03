@@ -4,7 +4,6 @@ import static guru.nidi.graphviz.model.Factory.*;
 
 import java.io.BufferedWriter;
 import java.io.File;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -14,30 +13,26 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 
+import com.alcreasoning.visitors.AllVisitors;
+
 import org.semanticweb.owlapi.model.OWLObject;
 
 import guru.nidi.graphviz.attribute.Color;
 import guru.nidi.graphviz.attribute.Label;
 import guru.nidi.graphviz.attribute.Shape;
-import guru.nidi.graphviz.attribute.Style;
-import guru.nidi.graphviz.attribute.Label.Justification;
 import guru.nidi.graphviz.engine.Format;
 import guru.nidi.graphviz.engine.Graphviz;
 import guru.nidi.graphviz.model.Graph;
-import guru.nidi.graphviz.model.MutableGraph;
-import guru.nidi.graphviz.model.MutableNode;
 import guru.nidi.graphviz.model.Node;
 
 
 public class GraphDrawer {
     private int graphviz_node_id = 0;       // Questo id serve solo per dare un id diverso ai nodi graphviz
-    private FunnyVisitor return_visitor;
     Graph graph;
     List<Node> node_list;
 
     public GraphDrawer(String graph_name){
         //this.graph = graph(graph_name).directed();
-        this.return_visitor = new FunnyVisitor(true);
         this.node_list = new ArrayList<>();
     }
 
@@ -145,8 +140,8 @@ public class GraphDrawer {
         String ret_string = set_name + " = {";
         int i = 0;
         for(OWLObject obj : L_x){
-            obj.accept(this.return_visitor);
-            ret_string += this.return_visitor.get_and_destroy_return_string();
+            obj.accept(AllVisitors.printer_v_save_string);
+            ret_string += AllVisitors.printer_v_save_string.get_and_destroy_return_string();
             if(i++ < L_x.size()-1) ret_string += ", "; else ret_string += "}";
         }
 

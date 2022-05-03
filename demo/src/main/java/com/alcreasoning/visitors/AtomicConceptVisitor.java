@@ -1,12 +1,10 @@
-package com.alcreasoning;
+package com.alcreasoning.visitors;
 
 import java.util.HashSet;
 
-import org.semanticweb.owlapi.model.OWLAxiom;
 import org.semanticweb.owlapi.model.OWLClass;
 import org.semanticweb.owlapi.model.OWLClassExpression;
 import org.semanticweb.owlapi.model.OWLEquivalentClassesAxiom;
-import org.semanticweb.owlapi.model.OWLObject;
 import org.semanticweb.owlapi.model.OWLObjectAllValuesFrom;
 import org.semanticweb.owlapi.model.OWLObjectComplementOf;
 import org.semanticweb.owlapi.model.OWLObjectIntersectionOf;
@@ -94,5 +92,4 @@ public class AtomicConceptVisitor implements OWLObjectVisitor{
         this.right_side_concepts.clear();
         return temp;
     }
-
 }

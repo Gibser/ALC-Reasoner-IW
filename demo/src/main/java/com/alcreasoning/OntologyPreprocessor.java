@@ -40,7 +40,7 @@ public class OntologyPreprocessor {
     private OWLOntology tbox;
     private HashSet<OWLLogicalAxiom> tbox_set;
     private OWLDataFactory factory;
-    private FunnyVisitor v;
+    private PrinterVisitor v;
     private AtomicConceptVisitor atomic_visitor;
     private OrAndPreprocessorVisitor or_and_preproc_visitor;
 
@@ -67,7 +67,7 @@ public class OntologyPreprocessor {
     public OntologyPreprocessor(String tbox_path){
         File tbox_file = new File(tbox_path);
         this.factory = tbox_man.getOWLDataFactory();
-        this.v = new FunnyVisitor();
+        this.v = new PrinterVisitor();
         this.atomic_visitor = new AtomicConceptVisitor();
         this.or_and_preproc_visitor = new OrAndPreprocessorVisitor();
         this.tbox_set = new HashSet<>();
@@ -292,6 +292,7 @@ public class OntologyPreprocessor {
 
     private HashSet<OWLClass> get_right_side(OWLLogicalAxiom axm){
         axm.accept(this.atomic_visitor);
+        this.atomic_visitor.get_left_side_concepts_and_clear();
         return this.atomic_visitor.get_right_side_concepts_and_clear();
     }
 
@@ -348,17 +349,10 @@ public class OntologyPreprocessor {
             if(!is_left_side_atomic(axm))
                 T_g.add(axm);
             else{
-                /*
-                boolean is_in_left_side = this.is_class_not_in_left_side(this.get_atomic_left_side(axm), left_side_T_u);
-                boolean is_T_u_acyclic = this.is_T_u_graph_acyclic(axm, left_side_T_u, right_side_T_u);
-                boolean is_axiom_acyclic = this.is_axiom_acyclic(axm);
-                System.out.println(is_in_left_side + " " + is_T_u_acyclic + " " + is_axiom_acyclic);
-                */
-                    
                 if(
-                    this.is_axiom_acyclic(axm)                                                       &&
-                    this.is_class_not_in_left_side(this.get_atomic_left_side(axm), left_side_T_u)    &&
-                    this.is_T_u_graph_acyclic(axm, left_side_T_u, right_side_T_u)                        
+                      this.is_axiom_acyclic(axm)                                                       &&
+                      this.is_class_not_in_left_side(this.get_atomic_left_side(axm), left_side_T_u)    &&
+                      this.is_T_u_graph_acyclic(axm, left_side_T_u, right_side_T_u)                        
                   ){
                     T_u.add(axm);
                     left_side_T_u.add(this.get_atomic_left_side(axm));
@@ -366,9 +360,8 @@ public class OntologyPreprocessor {
                    }
                 else
                     T_g.add(axm);
-            }
+            } 
         }
-        
         return new Pair<HashSet<OWLLogicalAxiom>, HashSet<OWLLogicalAxiom>>(T_g, T_u);
     }
     

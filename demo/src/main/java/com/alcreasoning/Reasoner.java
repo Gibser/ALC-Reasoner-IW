@@ -57,8 +57,8 @@ public class Reasoner {
     
     private AndVisitor or_visitor;
     private OrVisitor and_visitor;
-    private FunnyVisitor v;
-    private FunnyVisitor return_visitor;
+    private PrinterVisitor v;
+    private PrinterVisitor return_visitor;
     private OWLDataFactory factory;
     HashSet<OWLObject> abox = new HashSet<OWLObject>();
     HashSet<OWLObject> L_x = new HashSet<OWLObject>();
@@ -80,8 +80,8 @@ public class Reasoner {
         this.ontology_iri = ontology_iri;
         this.or_visitor = new AndVisitor();
         this.and_visitor = new OrVisitor();
-        this.v = new FunnyVisitor();
-        this.return_visitor = new FunnyVisitor(true);
+        this.v = new PrinterVisitor();
+        this.return_visitor = new PrinterVisitor(true);
         this.graph_drawer = new GraphDrawer("ALC Tableau");
         this.draw_graph = draw_graph;
         if(this.draw_graph)
@@ -164,15 +164,6 @@ public class Reasoner {
         return ret_string;
     }
 
-    private void print_L_x_temp(HashSet<OWLObject> L_x_temp){
-        int i = 0;
-        System.out.print("L_x_temp = {");
-        for(OWLObject obj : L_x_temp){
-            obj.accept(this.v);
-            if(i++ < L_x.size()-1) System.out.print(", "); else System.out.print("}\n");
-        }
-    }
-
     private void print_abox(){
         int i = 0;
         System.out.print("ABox = {");
@@ -232,7 +223,7 @@ public class Reasoner {
         Node child_node = null;
         if(this.draw_graph){
             if(or_branch)
-                child_node = this.graph_drawer.add_new_child(node, "" + FunnyVisitor.union, individual_name);
+                child_node = this.graph_drawer.add_new_child(node, "" + PrinterVisitor.union, individual_name);
             else{
                 property.accept(this.return_visitor);
                 child_node = this.graph_drawer.add_new_child(node, this.return_visitor.get_and_destroy_return_string() + ":" + parent_name, individual_name);
@@ -240,10 +231,6 @@ public class Reasoner {
         }
 
         return child_node;
-    }
-
-    private boolean check_bottom(OWLObjectPropertyExpression property, OWLClassExpression expr1, OWLClassExpression filler, HashMap<OWLObjectPropertyExpression, OWLClassExpression> properties_fillers){
-        return properties_fillers.containsKey(property) && properties_fillers.get(property).equals(expr1) && !filler.equals(expr1);
     }
 
     private void clash_rollback(HashSet<OWLObject> L_x, HashSet<OWLClassExpression> added, OWLNamedIndividual x, Node node, Resource node_rdf){
@@ -674,11 +661,10 @@ public class Reasoner {
                 added_axioms.add(right_side);
                 L_x.add(right_side);
             }
-            
             // Per l'equivalenza, controllo anche se (not(A) in L_x) e (not(C) not in L_x)
-            else if((ax instanceof OWLEquivalentClassesAxiom)                                   && 
-                    L_x.contains(this.factory.getOWLObjectComplementOf(left_side).getNNF())     &&
-                    !L_x.contains(this.factory.getOWLObjectComplementOf(right_side).getNNF())
+            else if(   (ax instanceof OWLEquivalentClassesAxiom)                                   && 
+                       L_x.contains(this.factory.getOWLObjectComplementOf(left_side).getNNF())     &&
+                       !L_x.contains(this.factory.getOWLObjectComplementOf(right_side).getNNF())
                    ){
                     added_axioms.add(this.factory.getOWLObjectComplementOf(this.lazy_unfolding_v.get_right_side()).getNNF());
                     L_x.add(this.factory.getOWLObjectComplementOf(this.lazy_unfolding_v.get_right_side()).getNNF());
@@ -1183,6 +1169,7 @@ public class Reasoner {
 
             if(clash_free)
                 this.graph_drawer.add_clash_free_node(this.last_child);
+
             this.graph_drawer.save_graph(save_path);
             this.save_rdf_graph(save_path);
         }

@@ -1,12 +1,9 @@
-package com.alcreasoning;
+package com.alcreasoning.visitors;
 
 import java.util.HashSet;
 
 import org.semanticweb.owlapi.model.OWLObjectVisitor;
-import org.semanticweb.owlapi.model.OWLClass;
 import org.semanticweb.owlapi.model.OWLClassExpression;
-import org.semanticweb.owlapi.model.OWLEquivalentClassesAxiom;
-import org.semanticweb.owlapi.model.OWLObject;
 import org.semanticweb.owlapi.model.OWLObjectUnionOf;
 
 /**
@@ -15,10 +12,6 @@ import org.semanticweb.owlapi.model.OWLObjectUnionOf;
 public class OrVisitor implements OWLObjectVisitor{
 
     HashSet<OWLClassExpression> rule_set = new HashSet<OWLClassExpression>();
-    
-    public void visit(OWLEquivalentClassesAxiom ax) {
-        ax.getOperandsAsList().get(1).accept(this);             
-    }
 
     public void visit(OWLObjectUnionOf intersection) {
         for(OWLClassExpression c : intersection.getOperands()){

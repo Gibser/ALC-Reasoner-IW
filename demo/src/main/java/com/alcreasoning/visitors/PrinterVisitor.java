@@ -1,14 +1,11 @@
-package com.alcreasoning;
+package com.alcreasoning.visitors;
 
 import org.semanticweb.owlapi.model.OWLObjectVisitor;
 import org.semanticweb.owlapi.model.OWLSubClassOfAxiom;
 
 import java.io.PrintStream;
 import java.io.UnsupportedEncodingException;
-import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -32,7 +29,7 @@ import org.semanticweb.owlapi.model.OWLObjectUnionOf;
 /**
     OWLObjectVisitor utilizzato per stampare assiomi nel terminale come formula in logica descrittiva
 */
-public class FunnyVisitor implements OWLObjectVisitor{
+public class PrinterVisitor implements OWLObjectVisitor{
     
     private String regexp_for_names;
     private Pattern r;
@@ -50,7 +47,7 @@ public class FunnyVisitor implements OWLObjectVisitor{
     static final char top = '\u23ca';
 
 
-    public FunnyVisitor(){
+    public PrinterVisitor(){
         regexp_for_names = "[^#]*#([a-zA-Z0-9_-]+)>$";
         r = Pattern.compile(regexp_for_names);
         try{
@@ -61,7 +58,7 @@ public class FunnyVisitor implements OWLObjectVisitor{
         }
     }
 
-    public FunnyVisitor(boolean save_string){
+    public PrinterVisitor(boolean save_string){
         this();
         this.save_string = save_string;
         this.return_string = "";
@@ -120,9 +117,9 @@ public class FunnyVisitor implements OWLObjectVisitor{
         OWLObjectPropertyExpression p = ce.getProperty();
         this.process_output(this.save_string, exists);
         Matcher m = r.matcher(p.toString());
-        if(m.find()){
+        if(m.find())
             this.process_output(this.save_string, m.group(1) + ".");
-        }
+
         ce.getFiller().accept(this);
     }
 
@@ -138,9 +135,8 @@ public class FunnyVisitor implements OWLObjectVisitor{
         int i = 0;
         for(OWLClassExpression operand : expr_list){
             operand.accept(this);
-            if(i++ < expr_list.size()-1){
+            if(i++ < expr_list.size()-1)
                 this.process_output(this.save_string, " disjoint ");
-            }
         }           
     }
 
@@ -156,9 +152,8 @@ public class FunnyVisitor implements OWLObjectVisitor{
 
     public void visit(OWLNamedIndividual ind) {
         Matcher m = r.matcher(ind.toString());
-        if(m.find()){
+        if(m.find())
             this.process_output(this.save_string, m.group(1));
-        }
     }
 
     public void visit(OWLObjectIntersectionOf intersection) {
@@ -182,7 +177,7 @@ public class FunnyVisitor implements OWLObjectVisitor{
             c.accept(this);
             if(++i < list_len){
                 this.process_output(this.save_string, " ");
-                this.process_output(this.save_string, FunnyVisitor.union);
+                this.process_output(this.save_string, PrinterVisitor.union);
                 this.process_output(this.save_string, " ");
             }
         }
@@ -193,9 +188,9 @@ public class FunnyVisitor implements OWLObjectVisitor{
         OWLObjectPropertyExpression p = ce.getProperty();
         this.process_output(this.save_string, foreach);
         Matcher m = r.matcher(p.toString());
-        if (m.find()) {
+        if (m.find())
             this.process_output(this.save_string, m.group(1) + ".");
-        }
+
         ce.getFiller().accept(this);
     }
 
@@ -217,16 +212,14 @@ public class FunnyVisitor implements OWLObjectVisitor{
 
     public void visit(OWLObjectProperty relation_property) {
         Matcher m = r.matcher(relation_property.toString());
-        if (m.find()) {
+        if (m.find())
             this.process_output(this.save_string, m.group(1));
-        }
     }
 
     public void visit(OWLObjectPropertyExpression relation_property) {
         Matcher m = r.matcher(relation_property.toString());
-        if (m.find()) {
+        if (m.find())
             this.process_output(this.save_string, m.group(1));
-        }
     }
 
     public void visit(OWLSubClassOfAxiom subclass){

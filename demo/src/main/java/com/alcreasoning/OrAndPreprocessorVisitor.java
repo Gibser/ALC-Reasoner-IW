@@ -28,11 +28,11 @@ public class OrAndPreprocessorVisitor implements OWLObjectVisitor{
     OWLClassExpression ret_expr = null;
     OWLLogicalAxiom new_axiom = null;
     private OWLDataFactory factory;
-    private FunnyVisitor v;
+    private PrinterVisitor v;
 
     public OrAndPreprocessorVisitor(){
         this.factory = OntologyPreprocessor.tbox_man.getOWLDataFactory();
-        this.v = new FunnyVisitor();
+        this.v = new PrinterVisitor();
     }
 
 

@@ -1,4 +1,4 @@
-package com.alcreasoning;
+package com.alcreasoning.visitors;
 
 import org.semanticweb.owlapi.model.OWLClass;
 import org.semanticweb.owlapi.model.OWLClassExpression;
