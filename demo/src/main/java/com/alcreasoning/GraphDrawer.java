@@ -160,7 +160,7 @@ public class GraphDrawer {
         Path path = Paths.get(save_path + "\\" + filename);
         try{
             while(Files.exists(path)){
-                filename = "graph" + "_" + ++duplicate_index + ".svg";
+                filename = "graph" + "_" + duplicate_index++ + ".svg";
                 path = Paths.get(save_path + "\\" + filename);
             }
             Graphviz.fromGraph(this.graph).width(500).render(Format.SVG).toFile(new File(save_path + "\\" + filename));

@@ -228,14 +228,14 @@ public class Reasoner {
         return this.factory.getOWLObjectPropertyAssertionAxiom(relation, x1, x2);
     }
 
-    private Node update_graph(boolean or_branch, Node node, String individual_name, OWLObjectPropertyExpression property){
+    private Node update_graph(boolean or_branch, Node node, String parent_name, String individual_name, OWLObjectPropertyExpression property){
         Node child_node = null;
         if(this.draw_graph){
             if(or_branch)
                 child_node = this.graph_drawer.add_new_child(node, "" + FunnyVisitor.union, individual_name);
             else{
                 property.accept(this.return_visitor);
-                child_node = this.graph_drawer.add_new_child(node, this.return_visitor.get_and_destroy_return_string(), individual_name);
+                child_node = this.graph_drawer.add_new_child(node, this.return_visitor.get_and_destroy_return_string() + ":" + parent_name, individual_name);
             }
         }
 
@@ -269,7 +269,7 @@ public class Reasoner {
         HashSet<OWLObjectSomeValuesFrom> owl_some_values_set;
         HashSet<OWLObjectAllValuesFrom> owl_all_values_set;
         HashSet<OWLClassExpression> added_joint;
-        HashMap<OWLObjectPropertyExpression, OWLClassExpression> properties_fillers = null;     // HashMap per conservare gli elementi <relazione, concetto>
+        //HashMap<OWLObjectPropertyExpression, OWLClassExpression> properties_fillers = null;     // HashMap per conservare gli elementi <relazione, concetto>
         boolean clash_free = false;
         
         for(OWLObject obj : L_x){
@@ -348,7 +348,7 @@ public class Reasoner {
                     ////
                     
                     // Grafo
-                    this.last_child = this.update_graph(true, node, x.getIRI().getShortForm(), null);
+                    this.last_child = this.update_graph(true, node, null, x.getIRI().getShortForm(), null);
                     // RDF
                     Resource rdf_union_node = this.rdf_model.createResource();
                     node_rdf.addProperty(this.rdf_model.createProperty(this.ontology_iri + "/#union"), rdf_union_node);
@@ -368,6 +368,7 @@ public class Reasoner {
                 // Se finiscono i disgiunti e clash_free è ancora false, vuol dire che nessuna combinazione di disgiunti evita un clash, 
                 // quindi posso ritornare false
                 if(!clash_free){
+                    clash_rollback(L_x, added_joint, x);
                     System.out.println("Disgiunti terminati: " + clash_free + "\n");
                     return false;
                 }
@@ -395,11 +396,11 @@ public class Reasoner {
         System.out.println("Applicazione regola esiste");
         System.out.println("-----------------------------------");
         
-        
+        /*
         if(!owl_some_values_set.isEmpty()){
             properties_fillers = new HashMap<>();
         }
-
+        */
 
         for(OWLObjectSomeValuesFrom obj : owl_some_values_set){
 
@@ -407,6 +408,7 @@ public class Reasoner {
             OWLObjectPropertyExpression property = obj.getProperty();
             boolean exists_rule_condition[] = {false};
             
+            /* Abbiamo interpretato male R some bottom
             // Se nel nodo attuale ho processato un Property some bottom, non puó esserci un altro figlio di relazione Property, 
             // oppure se ho processato un Property some C non posso trovare un Property some bottom, quindi insoddisfacibile
             if(this.check_bottom(property, this.factory.getOWLNothing(), filler, properties_fillers) || 
@@ -415,12 +417,14 @@ public class Reasoner {
                 clash_rollback(L_x, added_joint, x, node, node_rdf);
                 return false;
             }
-
-            properties_fillers.put(property, filler);
-
-            if(filler.equals(this.factory.getOWLNothing()))
-                continue;                                          // Non creo un figlio se il filler è bottom
-
+            */
+            //properties_fillers.put(property, filler);
+            
+            if(filler.equals(this.factory.getOWLNothing())){
+                clash_rollback(L_x, added_joint, x, node, node_rdf);
+                return false;                                          // Non creo un figlio se il filler è bottom
+            }
+            
             this.abox.stream()                                                                                                                                      // exists R.C
                     .filter(e -> e instanceof OWLObjectPropertyAssertionAxiom)                                                                                      // Raccolgo tutte le relazioni
                     .map(e -> (OWLObjectPropertyAssertionAxiom)e)                                                                                                   // Cast    
@@ -464,7 +468,7 @@ public class Reasoner {
                 
                 // Grafo
                 //Node child_node = this.update_graph(false, node, child.getIRI().getShortForm(), property);
-                this.last_child = this.update_graph(false, node, child.getIRI().getShortForm(), property);
+                this.last_child = this.update_graph(false, node, x.getIRI().getShortForm(), child.getIRI().getShortForm(), property);
                 // RDF
                 this.last_child_rdf = this.rdf_model.createResource(child.getIRI().toString());
                 property.accept(this.return_visitor);
@@ -498,7 +502,7 @@ public class Reasoner {
         HashSet<OWLObjectSomeValuesFrom> owl_some_values_set;
         HashSet<OWLObjectAllValuesFrom> owl_all_values_set;
         HashSet<OWLClassExpression> added_joint;
-        HashMap<OWLObjectPropertyExpression, OWLClassExpression> properties_fillers = null;     // HashMap per conservare gli elementi <relazione, concetto>
+        //HashMap<OWLObjectPropertyExpression, OWLClassExpression> properties_fillers = null;     // HashMap per conservare gli elementi <relazione, concetto>
         boolean clash_free = false;
         
         for(OWLObject obj : L_x){
@@ -555,6 +559,7 @@ public class Reasoner {
                 // Se finiscono i disgiunti e clash_free è ancora false, vuol dire che nessuna combinazione di disgiunti evita un clash, 
                 // quindi posso ritornare false
                 if(!clash_free){
+                    this.clash_rollback(L_x, added_joint, x);
                     return false;
                 }
                 
@@ -576,12 +581,13 @@ public class Reasoner {
         owl_some_values_set = L_x.stream().filter(e -> (e instanceof OWLObjectSomeValuesFrom)).map(e -> (OWLObjectSomeValuesFrom)e).collect(Collectors.toCollection(HashSet::new));
         owl_all_values_set = L_x.stream().filter(e -> (e instanceof OWLObjectAllValuesFrom)).map(e -> (OWLObjectAllValuesFrom)e).collect(Collectors.toCollection(HashSet::new));
         
-        this.print_class_expression_set(owl_some_values_set, "Esistenziali");
+        //this.print_class_expression_set(owl_some_values_set, "Esistenziali");
         
+        /*
         if(!owl_some_values_set.isEmpty()){
             properties_fillers = new HashMap<>();
         }
-
+        */
 
         for(OWLObjectSomeValuesFrom obj : owl_some_values_set){
 
@@ -589,6 +595,7 @@ public class Reasoner {
             OWLObjectPropertyExpression property = obj.getProperty();
             boolean exists_rule_condition[] = {false};
             
+            /*
             // Se nel nodo attuale ho processato un Property some bottom, non puó esserci un altro figlio di relazione Property, 
             // oppure se ho processato un Property some C non posso trovare un Property some bottom, quindi insoddisfacibile
             if(this.check_bottom(property, this.factory.getOWLNothing(), filler, properties_fillers) || 
@@ -597,12 +604,13 @@ public class Reasoner {
                 clash_rollback(L_x, added_joint, x);
                 return false;
             }
+            */
+            //properties_fillers.put(property, filler);
 
-            properties_fillers.put(property, filler);
-
-            if(filler.equals(this.factory.getOWLNothing()))
-                continue;                                          // Non creo un figlio se il filler è bottom
-
+            if(filler.equals(this.factory.getOWLNothing())){
+                this.clash_rollback(L_x, added_joint, x);
+                return false;
+            }
             this.abox.stream()                                                                                                                                      // exists R.C
                     .filter(e -> e instanceof OWLObjectPropertyAssertionAxiom)                                                                                      // Raccolgo tutte le relazioni
                     .map(e -> (OWLObjectPropertyAssertionAxiom)e)                                                                                                   // Cast    
@@ -703,7 +711,7 @@ public class Reasoner {
         HashSet<OWLClassExpression> added_lazy = new HashSet<>();
         boolean clash_free = false;
         boolean apply_lazy_unfolding = true;
-        HashMap<OWLObjectPropertyExpression, OWLClassExpression> properties_fillers = null;     // HashMap per conservare gli elementi <relazione, concetto>
+        //HashMap<OWLObjectPropertyExpression, OWLClassExpression> properties_fillers = null;     // HashMap per conservare gli elementi <relazione, concetto>
         
         while(apply_lazy_unfolding){
             // Regola and
@@ -785,7 +793,7 @@ public class Reasoner {
                     ////
 
                     // Grafo
-                    this.last_child = this.update_graph(true, node, x.getIRI().getShortForm(), null);
+                    this.last_child = this.update_graph(true, node, null, x.getIRI().getShortForm(), null);
                     // RDF
                     this.last_child_rdf = this.rdf_model.createResource();
                     node_rdf.addProperty(this.rdf_model.createProperty(this.ontology_iri + "/#union"), this.last_child_rdf);
@@ -808,6 +816,7 @@ public class Reasoner {
                 // quindi posso ritornare false
                 if(!clash_free){
                     System.out.println("Disgiunti terminati: " + clash_free + "\n");
+                    this.clash_rollback(L_x, added_conj_lazy, x);
                     return false;
                 }
             }
@@ -833,15 +842,18 @@ public class Reasoner {
         System.out.println("Applicazione regola esiste");
         System.out.println("-----------------------------------");
 
+        /*
         if(!owl_some_values_set.isEmpty()){
             properties_fillers = new HashMap<>();
         }
+        */
 
         for(OWLObjectSomeValuesFrom obj : owl_some_values_set){
             OWLClassExpression filler = obj.getFiller();
             OWLObjectPropertyExpression property = obj.getProperty();
             boolean exists_rule_condition[] = {false};
 
+            /*
             // Se nel nodo attuale ho processato un Property some bottom, non puó esserci un altro figlio di relazione Property, 
             // oppure se ho processato un Property some C non posso trovare un Property some bottom, quindi insoddisfacibile
             if(this.check_bottom(property, this.factory.getOWLNothing(), filler, properties_fillers) || 
@@ -850,8 +862,9 @@ public class Reasoner {
                 clash_rollback(L_x, added_conj_lazy, x, node, node_rdf);
                 return false;
             }
+            */
 
-            properties_fillers.put(property, filler);
+            //properties_fillers.put(property, filler);
 
             if(filler.equals(this.factory.getOWLNothing()))
                 continue;
@@ -897,7 +910,7 @@ public class Reasoner {
                                   });
 
                 // Grafo
-                this.last_child = this.update_graph(false, node, child.getIRI().getShortForm(), property);
+                this.last_child = this.update_graph(false, node, x.getIRI().getShortForm(), child.getIRI().getShortForm(), property);
                 // RDF
                 this.last_child_rdf = this.rdf_model.createResource(child.getIRI().toString());
                 property.accept(this.return_visitor);
@@ -938,7 +951,7 @@ public class Reasoner {
         HashSet<OWLClassExpression> added_lazy = new HashSet<>();
         boolean clash_free = false;
         boolean apply_lazy_unfolding = true;
-        HashMap<OWLObjectPropertyExpression, OWLClassExpression> properties_fillers = null;     // HashMap per conservare gli elementi <relazione, concetto>
+        //HashMap<OWLObjectPropertyExpression, OWLClassExpression> properties_fillers = null;     // HashMap per conservare gli elementi <relazione, concetto>
 
         while(apply_lazy_unfolding){
             // Regola and
@@ -1006,6 +1019,7 @@ public class Reasoner {
                 // Se finiscono i disgiunti e clash_free è ancora false, vuol dire che nessuna combinazione di disgiunti evita un clash, 
                 // quindi posso ritornare false
                 if(!clash_free){
+                    this.clash_rollback(L_x, added_conj_lazy, x);
                     return false;
                 }
             }
@@ -1026,15 +1040,18 @@ public class Reasoner {
         owl_some_values_set = L_x.stream().filter(e -> (e instanceof OWLObjectSomeValuesFrom)).map(e -> (OWLObjectSomeValuesFrom)e).collect(Collectors.toCollection(HashSet::new));
         owl_all_values_set = L_x.stream().filter(e -> (e instanceof OWLObjectAllValuesFrom)).map(e -> (OWLObjectAllValuesFrom)e).collect(Collectors.toCollection(HashSet::new));
         
+        /*
         if(!owl_some_values_set.isEmpty()){
             properties_fillers = new HashMap<>();
         }
-
+        */
+        
         for(OWLObjectSomeValuesFrom obj : owl_some_values_set){
             OWLClassExpression filler = obj.getFiller();
             OWLObjectPropertyExpression property = obj.getProperty();
             boolean exists_rule_condition[] = {false};
 
+            /*
             // Se nel nodo attuale ho processato un Property some bottom, non puó esserci un altro figlio di relazione Property, 
             // oppure se ho processato un Property some C non posso trovare un Property some bottom, quindi insoddisfacibile
             if(this.check_bottom(property, this.factory.getOWLNothing(), filler, properties_fillers) || 
@@ -1043,8 +1060,9 @@ public class Reasoner {
                 clash_rollback(L_x, added_conj_lazy, x);
                 return false;
             }
+            */
 
-            properties_fillers.put(property, filler);
+            //properties_fillers.put(property, filler);
 
             if(filler.equals(this.factory.getOWLNothing()))
                 continue;
@@ -1145,8 +1163,8 @@ public class Reasoner {
     }
 
     public boolean check_consistency(String save_path, boolean lazy_unfolding){
-        File labels_dir = new File("./ProgettoIW/labels");
-        File graphs_dir = new File("./ProgettoIW/graphs");
+        File labels_dir = new File("./labels");
+        File graphs_dir = new File("./graphs");
         boolean clash_free = false;
         Instant start, end;
         if(!labels_dir.exists()) labels_dir.mkdir();

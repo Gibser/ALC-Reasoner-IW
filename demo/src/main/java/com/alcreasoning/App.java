@@ -124,7 +124,7 @@ public final class App {
         OrAndPreprocessorVisitor p = new OrAndPreprocessorVisitor();
         AtomicConceptVisitor n = new AtomicConceptVisitor();
 
-        OntologyPreprocessor preproc = new OntologyPreprocessor("veicolo_pep.owl");
+        OntologyPreprocessor preproc = new OntologyPreprocessor("KB_13.owl");
         Pair<OWLClass, OWLClassExpression> concept = null;
         try{
              concept = get_concept_from_input(preproc);
