@@ -265,7 +265,7 @@ public class OntologyPreprocessor {
                                                           this.tbox_set.add(this.or_and_preproc_visitor.getLogicalAxiom());
                                                          });
             else if(axm instanceof OWLObjectPropertyDomainAxiom){
-                OWLObjectSomeValuesFrom expr = this.factory.getOWLObjectSomeValuesFrom(((OWLObjectPropertyDomainAxiom)axm).getProperty(), this.factory.getOWLNothing());
+                OWLObjectSomeValuesFrom expr = this.factory.getOWLObjectSomeValuesFrom(((OWLObjectPropertyDomainAxiom)axm).getProperty(), this.factory.getOWLThing());
                 OWLSubClassOfAxiom processed_domain_axiom = this.factory.getOWLSubClassOfAxiom(expr, ((OWLObjectPropertyDomainAxiom)axm).getDomain());
                 this.tbox_set.add(processed_domain_axiom);
             }
@@ -302,9 +302,16 @@ public class OntologyPreprocessor {
 
     private boolean is_left_side_atomic(OWLLogicalAxiom axm){
         if(axm instanceof OWLEquivalentClassesAxiom)
-            return ((OWLEquivalentClassesAxiom)axm).getOperandsAsList().get(0) instanceof OWLClass;
+            if(((OWLEquivalentClassesAxiom)axm).getOperandsAsList().get(0).isOWLThing())
+                return false;
+            else
+                return ((OWLEquivalentClassesAxiom)axm).getOperandsAsList().get(0) instanceof OWLClass;
+                
         else if(axm instanceof OWLSubClassOfAxiom)
-            return ((OWLSubClassOfAxiom)axm).getSubClass() instanceof OWLClass;
+            if(((OWLSubClassOfAxiom)axm).getSubClass().isOWLThing())
+                return false;
+            else
+                return ((OWLSubClassOfAxiom)axm).getSubClass() instanceof OWLClass;
         else
             return false;
     }

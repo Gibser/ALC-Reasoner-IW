@@ -43,8 +43,8 @@ public class PrinterVisitor implements OWLObjectVisitor{
 	static final char not = '\u00AC';
 	static final char inclusion = '\u2291';
     static final char equiv = '\u2261';
-    static final char bottom = '\u23ca';
-    static final char top = '\u23ca';
+    static final char bottom = '\u22a5';
+    static final char top = '\u22a4';
 
 
     public PrinterVisitor(){

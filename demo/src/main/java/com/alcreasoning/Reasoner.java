@@ -717,7 +717,8 @@ public class Reasoner {
             // Regole lazy unfolding
             added_lazy = this.lazy_unfolding_rules(L_x);
             added_conj_lazy.addAll(added_lazy);
-
+            this.print_class_expression_set(added_lazy, "added_lazy");
+            
             if(!this.contains_and(added_lazy))
                 apply_lazy_unfolding = false;
         }
