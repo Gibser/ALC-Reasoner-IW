@@ -33,7 +33,7 @@ public final class App {
 
     public static void main(String[] args) {
 
-        OntologyPreprocessor preproc = new OntologyPreprocessor("KB_13.owl");
+        OntologyPreprocessor preproc = new OntologyPreprocessor("veicolo_pep.owl");
         Pair<OWLClass, OWLClassExpression> concept = null;
 
         try {

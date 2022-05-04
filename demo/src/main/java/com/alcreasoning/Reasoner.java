@@ -78,6 +78,7 @@ public class Reasoner {
     private Resource last_child_rdf;
     private boolean draw_graph;
     private Model rdf_model;
+    static final char union = '\u2294';
 
 
     private Reasoner(IRI ontology_iri, boolean draw_graph){
@@ -228,7 +229,7 @@ public class Reasoner {
         Node child_node = null;
         if(this.draw_graph){
             if(or_branch)
-                child_node = this.graph_drawer.add_new_child(node, "" + PrinterVisitor.union, individual_name);
+                child_node = this.graph_drawer.add_new_child(node, "" + union, individual_name);
             else{
                 property.accept(this.return_visitor);
                 child_node = this.graph_drawer.add_new_child(node, this.return_visitor.get_and_destroy_return_string() + ":" + parent_name, individual_name);
