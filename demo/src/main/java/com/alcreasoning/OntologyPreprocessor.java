@@ -7,6 +7,10 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
 
+import com.alcreasoning.visitors.AtomicConceptVisitor;
+import com.alcreasoning.visitors.OrAndPreprocessorVisitor;
+import com.alcreasoning.visitors.PrinterVisitor;
+
 import org.eclipse.rdf4j.model.vocabulary.OWL;
 import org.semanticweb.owlapi.apibinding.OWLManager;
 import org.semanticweb.owlapi.model.IRI;

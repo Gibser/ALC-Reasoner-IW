@@ -1,7 +1,9 @@
-package com.alcreasoning;
+package com.alcreasoning.visitors;
 
 import java.util.HashSet;
 import java.util.List;
+
+import com.alcreasoning.OntologyPreprocessor;
 
 import org.semanticweb.owlapi.model.OWLClass;
 import org.semanticweb.owlapi.model.OWLClassExpression;

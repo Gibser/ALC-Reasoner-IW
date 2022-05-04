@@ -37,7 +37,7 @@ public class PrinterVisitor implements OWLObjectVisitor{
     private String return_string;
     private PrintStream out;
     static final char intersect = '\u2293';
-	static final char union = '\u2294';
+	public static final char union = '\u2294';
 	static final char foreach = '\u2200';
 	static final char exists = '\u2203';
 	static final char not = '\u00AC';
