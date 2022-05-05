@@ -11,4 +11,5 @@ public class AllVisitors {
     public static PrinterVisitor printer_v_save_string = new PrinterVisitor(true);
     public static AtomicConceptVisitor atomic_visitor = new AtomicConceptVisitor();
     public static LazyUnfoldingVisitor lazy_unfolding_v = new LazyUnfoldingVisitor();
+    public static OrAndPreprocessorVisitor or_and_preproc_v = new OrAndPreprocessorVisitor();
 }

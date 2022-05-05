@@ -2,32 +2,26 @@ package com.alcreasoning;
 
 import java.io.File;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
 import java.util.HashSet;
 
+import com.alcreasoning.visitors.AllVisitors;
 import com.alcreasoning.visitors.AtomicConceptVisitor;
 import com.alcreasoning.visitors.OrAndPreprocessorVisitor;
 import com.alcreasoning.visitors.PrinterVisitor;
 
-import org.eclipse.rdf4j.model.vocabulary.OWL;
 import org.semanticweb.owlapi.apibinding.OWLManager;
 import org.semanticweb.owlapi.model.IRI;
-import org.semanticweb.owlapi.model.OWLAxiom;
 import org.semanticweb.owlapi.model.OWLClass;
 import org.semanticweb.owlapi.model.OWLClassExpression;
 import org.semanticweb.owlapi.model.OWLDataFactory;
 import org.semanticweb.owlapi.model.OWLDisjointClassesAxiom;
 import org.semanticweb.owlapi.model.OWLEquivalentClassesAxiom;
 import org.semanticweb.owlapi.model.OWLLogicalAxiom;
-import org.semanticweb.owlapi.model.OWLObject;
 import org.semanticweb.owlapi.model.OWLObjectAllValuesFrom;
 import org.semanticweb.owlapi.model.OWLObjectPropertyDomainAxiom;
 import org.semanticweb.owlapi.model.OWLObjectPropertyRangeAxiom;
 import org.semanticweb.owlapi.model.OWLObjectSomeValuesFrom;
 import org.semanticweb.owlapi.model.OWLObjectUnionOf;
-import org.semanticweb.owlapi.model.OWLObjectVisitor;
 import org.semanticweb.owlapi.model.OWLOntology;
 import org.semanticweb.owlapi.model.OWLOntologyCreationException;
 import org.semanticweb.owlapi.model.OWLOntologyManager;
@@ -40,14 +34,15 @@ public class OntologyPreprocessor {
     public static OWLOntologyManager concept_man = OWLManager.createOWLOntologyManager();
     public static OWLOntologyManager tbox_man = OWLManager.createOWLOntologyManager();
     
-    private Pair<OWLClass, OWLClassExpression> concept;
-    private OWLOntology tbox;
-    private HashSet<OWLLogicalAxiom> tbox_set;
-    private OWLDataFactory factory;
-    private PrinterVisitor v;
     private AtomicConceptVisitor atomic_visitor;
     private OrAndPreprocessorVisitor or_and_preproc_visitor;
+    private PrinterVisitor v;
 
+    private OWLOntology tbox;
+    private HashSet<OWLLogicalAxiom> tbox_set;
+    private Pair<OWLClass, OWLClassExpression> concept;
+    private OWLDataFactory factory;
+    
     /*
     public OntologyPreprocessor(String concept_path, String tbox_path){
         File concept_file = new File(concept_path);
@@ -57,7 +52,7 @@ public class OntologyPreprocessor {
         this.atomic_visitor = new AtomicConceptVisitor();
         this.or_and_preproc_visitor = new OrAndPreprocessorVisitor();
         this.tbox_set = new HashSet<>();
-
+    
         try{
             this.tbox = tbox_man.loadOntologyFromOntologyDocument(tbox_file);
             this.concept = concept_man.loadOntologyFromOntologyDocument(concept_file);
@@ -67,13 +62,17 @@ public class OntologyPreprocessor {
     }
     */
 
+    private OntologyPreprocessor(){
+        this.v = AllVisitors.printer_visitor;
+        this.atomic_visitor = AllVisitors.atomic_visitor;
+        this.or_and_preproc_visitor = AllVisitors.or_and_preproc_v;
+    }
+
     // TBox non vuota
     public OntologyPreprocessor(String tbox_path){
+        this();
         File tbox_file = new File(tbox_path);
         this.factory = tbox_man.getOWLDataFactory();
-        this.v = new PrinterVisitor();
-        this.atomic_visitor = new AtomicConceptVisitor();
-        this.or_and_preproc_visitor = new OrAndPreprocessorVisitor();
         this.tbox_set = new HashSet<>();
 
         try{
@@ -162,7 +161,7 @@ public class OntologyPreprocessor {
         OWLClassExpression conjunction = null;
 
         for(OWLLogicalAxiom ax : this.tbox_set){
-            ///
+            /// fase di stampa della TBox
             System.out.print("TBox: ");
             ax.getNNF().accept(v);
             System.out.println();
@@ -198,7 +197,7 @@ public class OntologyPreprocessor {
         OWLClassExpression conjunction = null;
 
         for(OWLLogicalAxiom ax : T_g){
-            ///
+            /// fase di stampa di T_g
             System.out.print("TBox: ");
             ax.getNNF().accept(v);
             System.out.println();
@@ -257,13 +256,14 @@ public class OntologyPreprocessor {
         return ret;
     }
 
-    public void preprocess_and_or_tbox(){
+    public void preprocess_and_or_tbox() {
+        
         for(OWLLogicalAxiom axm : this.tbox.getLogicalAxioms()){
             if(axm instanceof OWLDisjointClassesAxiom)
                 this.convert_disjointness((OWLDisjointClassesAxiom)axm).stream()
-                                    .forEach(disj_axm -> {disj_axm.accept(this.or_and_preproc_visitor);
-                                                          this.tbox_set.add(this.or_and_preproc_visitor.getLogicalAxiom());
-                                                         });
+                                           .forEach(disj_axm -> {disj_axm.accept(this.or_and_preproc_visitor);
+                                                                 this.tbox_set.add(this.or_and_preproc_visitor.getLogicalAxiom());
+                                                                });
             else if(axm instanceof OWLObjectPropertyDomainAxiom){
                 OWLObjectSomeValuesFrom expr = this.factory.getOWLObjectSomeValuesFrom(((OWLObjectPropertyDomainAxiom)axm).getProperty(), this.factory.getOWLThing());
                 OWLSubClassOfAxiom processed_domain_axiom = this.factory.getOWLSubClassOfAxiom(expr, ((OWLObjectPropertyDomainAxiom)axm).getDomain());
@@ -278,7 +278,6 @@ public class OntologyPreprocessor {
                 axm.getNNF().accept(this.or_and_preproc_visitor);
                 this.tbox_set.add(this.or_and_preproc_visitor.getLogicalAxiom());
             }
-            
         }
     }
 

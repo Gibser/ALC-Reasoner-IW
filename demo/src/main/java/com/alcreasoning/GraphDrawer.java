@@ -27,6 +27,7 @@ import guru.nidi.graphviz.model.Node;
 
 
 public class GraphDrawer {
+    
     private int graphviz_node_id = 0;       // Questo id serve solo per dare un id diverso ai nodi graphviz
     Graph graph;
     List<Node> node_list;

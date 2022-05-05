@@ -16,6 +16,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.stream.Collectors;
 
+import com.alcreasoning.visitors.AllVisitors;
 import com.alcreasoning.visitors.AndVisitor;
 import com.alcreasoning.visitors.LazyUnfoldingVisitor;
 import com.alcreasoning.visitors.OrVisitor;
@@ -58,51 +59,63 @@ import guru.nidi.graphviz.model.Node;
 import static guru.nidi.graphviz.model.Factory.*;
 
 public class Reasoner {
+    private static final char union = '\u2294';
 
-    
-    private AndVisitor or_visitor;
-    private OrVisitor and_visitor;
+    private AndVisitor and_visitor;
+    private OrVisitor or_visitor;
     private PrinterVisitor v;
     private PrinterVisitor return_visitor;
-    private OWLDataFactory factory;
-    HashSet<OWLObject> abox = new HashSet<OWLObject>();
-    HashSet<OWLObject> L_x = new HashSet<OWLObject>();
-    HashSet<OWLLogicalAxiom> T_u = new HashSet<OWLLogicalAxiom>();
-    private IRI ontology_iri;
-    private int node_index = -1;
-    private OWLClassExpression Ĉ = null;
-    private OWLNamedIndividual root;
     private LazyUnfoldingVisitor lazy_unfolding_v;
+
+    private OWLDataFactory factory;
+    private IRI ontology_iri;
+    private OWLClassExpression Ĉ = null;
+    private HashSet<OWLObject> abox = new HashSet<OWLObject>();
+    private HashSet<OWLObject> L_x = new HashSet<OWLObject>();
+    private HashSet<OWLLogicalAxiom> T_u = new HashSet<OWLLogicalAxiom>();    
+
+    private OWLNamedIndividual root;
+    private int node_index = -1;
+
+    private boolean draw_graph;
+
     private GraphDrawer graph_drawer;
     private Node last_child;
+    
+    private Model rdf_model;  
     private Resource last_child_rdf;
-    private boolean draw_graph;
-    private Model rdf_model;
-    static final char union = '\u2294';
+    
+
+    private Reasoner(){
+        this.and_visitor = AllVisitors.and_visitor;
+        this.or_visitor = AllVisitors.or_visitor;
+        this.v = AllVisitors.printer_visitor;
+        this.return_visitor = AllVisitors.printer_v_save_string;
+    }
 
 
-    private Reasoner(IRI ontology_iri, boolean draw_graph){
+    private Reasoner(IRI ontology_iri, boolean draw_graph) {
+        this();
         this.factory = OntologyPreprocessor.concept_man.getOWLDataFactory();
         this.ontology_iri = ontology_iri;
-        this.or_visitor = new AndVisitor();
-        this.and_visitor = new OrVisitor();
-        this.v = new PrinterVisitor();
-        this.return_visitor = new PrinterVisitor(true);
         this.graph_drawer = new GraphDrawer("ALC Tableau");
         this.draw_graph = draw_graph;
-        if(this.draw_graph)
+        if (this.draw_graph)
             rdf_model = ModelFactory.createDefaultModel();
         //this.graph = ModelFactory.createDefaultModel();
     }
-
+    
+    /*
     public Reasoner(OWLClassExpression concept_name, OWLClassExpression concept, IRI ontology_iri, boolean draw_graph){
         this(ontology_iri, draw_graph);
         this.L_x.add(concept);
         this.root = this.create_individual();
         this.add_axiom_to_abox(concept_name, root);
     }
+    */
 
-    public Reasoner(OWLClassExpression Ĉ, HashSet<OWLClassExpression> KB_with_concept_name, HashSet<OWLClassExpression> KB_with_concept, IRI ontology_iri, boolean draw_graph){
+    public Reasoner(OWLClassExpression Ĉ, HashSet<OWLClassExpression> KB_with_concept_name,
+        HashSet<OWLClassExpression> KB_with_concept, IRI ontology_iri, boolean draw_graph) {
         this(ontology_iri, draw_graph);
         this.L_x.addAll(KB_with_concept);
         this.root = this.create_individual();
@@ -117,33 +130,20 @@ public class Reasoner {
         this.addall_axiom_to_abox(KB_with_concept_name, root);
         this.Ĉ = T_g;
         this.T_u = T_u;
-        this.lazy_unfolding_v = new LazyUnfoldingVisitor();
+        this.lazy_unfolding_v = AllVisitors.lazy_unfolding_v;
     }
 
 
     private boolean check_not_clash(HashSet<OWLObject> L_x){
-        HashSet<OWLObject> atomic_concept = new HashSet<OWLObject>();
-        HashSet<OWLObject> not_atomic_concept = new HashSet<OWLObject>();
-
         if(L_x.contains(this.factory.getOWLNothing()))
             return false;
 
-        for(OWLObject obj : L_x){
-            if(obj instanceof OWLClass){
-               atomic_concept.add((OWLClass)obj);
-            }
-            else if(obj instanceof OWLObjectComplementOf){
-                not_atomic_concept.add((OWLObjectComplementOf) obj);
-            }
-        }
 
-        for(OWLObject obj : atomic_concept){
-            if(not_atomic_concept.contains(((OWLClass)obj).getObjectComplementOf())){
-                System.out.print("Clash: ");
-                obj.accept(this.v);
-                System.out.println();
-                return false;
-            }
+        
+        for(OWLObject obj : L_x){
+            if (obj instanceof OWLClass)
+                if (L_x.contains(((OWLClass) obj).getComplementNNF()))
+                    return false;
         }   
 
         return true;
@@ -179,14 +179,20 @@ public class Reasoner {
         }
     }
 
+    /*
+    private boolean add_axiom_to_abox(OWLObjectPropertyExpression relation, OWLNamedIndividual x1, OWLNamedIndividual x2){
+        return this.abox.add(this.instantiate_property_axiom(relation, x1, x2));
+    }
+    */
+
     private boolean add_axiom_to_abox(OWLObject axm, OWLNamedIndividual x){
         return this.abox.add(this.factory.getOWLClassAssertionAxiom((OWLClassExpression) axm, x));
     }
 
-    private boolean add_axiom_to_abox(OWLObject axm){
+    private boolean add_axiom_to_abox(OWLObject axm) {
         return this.abox.add(axm);
     }
-
+    
     private HashSet<OWLClassExpression> addall_axiom_to_abox(HashSet<OWLClassExpression> axms, OWLNamedIndividual x){
         HashSet<OWLClassExpression> added_items = new HashSet<>();
         for(OWLClassExpression obj : axms){
@@ -197,16 +203,8 @@ public class Reasoner {
         return added_items;
     }
 
-    private void removeall_axiom_from_abox(HashSet<? extends OWLObject> axms){
-        this.abox.removeAll(axms);
-    }
-
     private OWLNamedIndividual create_individual(){
         return this.factory.getOWLNamedIndividual(IRI.create(this.ontology_iri+ "#x_" + ++this.node_index));
-    }
-
-    private boolean add_axiom_to_abox(OWLObjectPropertyExpression relation, OWLNamedIndividual x1, OWLNamedIndividual x2){
-        return this.abox.add(this.instantiate_property_axiom(relation, x1, x2));
     }
 
     private HashSet<OWLClassAssertionAxiom> instantiateall_axiom(HashSet<OWLClassExpression> axms, OWLNamedIndividual x){
@@ -221,8 +219,14 @@ public class Reasoner {
         return this.factory.getOWLClassAssertionAxiom(axm, x);
     }
 
-    private OWLObjectPropertyAssertionAxiom instantiate_property_axiom(OWLObjectPropertyExpression relation, OWLNamedIndividual x1, OWLNamedIndividual x2){
+    private OWLObjectPropertyAssertionAxiom instantiate_property_axiom(OWLObjectPropertyExpression relation,
+            OWLNamedIndividual x1, OWLNamedIndividual x2) {
         return this.factory.getOWLObjectPropertyAssertionAxiom(relation, x1, x2);
+    }
+
+    
+    private void removeall_axiom_from_abox(HashSet<? extends OWLObject> axms) {
+        this.abox.removeAll(axms);
     }
 
     private Node update_graph(boolean or_branch, Node node, String parent_name, String individual_name, OWLObjectPropertyExpression property){
@@ -235,7 +239,6 @@ public class Reasoner {
                 child_node = this.graph_drawer.add_new_child(node, this.return_visitor.get_and_destroy_return_string() + ":" + parent_name, individual_name);
             }
         }
-
         return child_node;
     }
 
@@ -250,11 +253,17 @@ public class Reasoner {
         node_rdf.addProperty(this.rdf_model.createProperty(this.ontology_iri + "/#clash"), "CLASH");
     }
 
-    private void clash_rollback(HashSet<OWLObject> L_x, HashSet<OWLClassExpression> added, OWLNamedIndividual x){
+    private void clash_rollback(HashSet<OWLObject> L_x, HashSet<OWLClassExpression> added, OWLNamedIndividual x) {
         // rimuovo congiunti da L_x
         L_x.removeAll(added);
         // rimuovo congiunti dall'ABox
         this.removeall_axiom_from_abox(this.instantiateall_axiom(added, x));
+    }
+
+    private void and_rule(HashSet<OWLObject> L_x) {
+        for (OWLObject obj : L_x) {
+            obj.accept(and_visitor);
+        }
     }
 
     public boolean tableau_algorithm_non_empty_tbox(OWLNamedIndividual x, HashSet<OWLObject> L_parent, HashSet<OWLObject> L_x, Node node, Resource node_rdf){
@@ -264,12 +273,10 @@ public class Reasoner {
         HashSet<OWLClassExpression> added_joint;
         //HashMap<OWLObjectPropertyExpression, OWLClassExpression> properties_fillers = null;     // HashMap per conservare gli elementi <relazione, concetto>
         boolean clash_free = false;
-        
-        for(OWLObject obj : L_x){
-            obj.accept(or_visitor);
-        }
-        
-        L_x.addAll(or_visitor.get_rule_set());
+
+        and_rule(L_x);
+
+        L_x.addAll(and_visitor.get_rule_set());
 
         // Blocking
         if(this.Ĉ != null && this.blocking(L_parent, L_x)){
@@ -283,7 +290,7 @@ public class Reasoner {
         node_rdf.addProperty(this.rdf_model.createProperty(this.ontology_iri + "/#L_x"), this.graph_drawer.return_set_as_string(L_x, "L_" + x.getIRI().getShortForm()));
 
 
-        added_joint = this.addall_axiom_to_abox(or_visitor.get_rule_set_and_reset(), x);
+        added_joint = this.addall_axiom_to_abox(and_visitor.get_rule_set_and_reset(), x);
         
         if(!this.check_not_clash(L_x)){
             clash_rollback(L_x, added_joint, x, node, node_rdf);
@@ -318,8 +325,8 @@ public class Reasoner {
             System.out.println();
             ////
             
-            obj.accept(and_visitor);
-            disjointed = and_visitor.get_rule_set_and_reset();
+            obj.accept(or_visitor);
+            disjointed = or_visitor.get_rule_set_and_reset();
             boolean is_present = false;
             for(OWLClassExpression disj : disjointed){
                 if(this.abox.contains(this.factory.getOWLClassAssertionAxiom((OWLClassExpression) disj, x))){
@@ -434,7 +441,7 @@ public class Reasoner {
                 OWLObjectPropertyAssertionAxiom instantiated_property_axiom = this.instantiate_property_axiom(property, x, child);
                 
                 if(this.add_axiom_to_abox(instantiated_axiom))
-                    added_axioms.add(instantiated_axiom);                                                                                   // Si aggiunge C(child) all'ABox
+                    added_axioms.add(instantiated_axiom);                                                                          // Si aggiunge C(child) all'ABox
                 
                 if(this.add_axiom_to_abox(instantiated_property_axiom))                                                            // Si aggiunge R(x, child) all'ABox 
                     added_axioms.add(instantiated_property_axiom);
@@ -499,10 +506,10 @@ public class Reasoner {
         boolean clash_free = false;
         
         for(OWLObject obj : L_x){
-            obj.accept(or_visitor);
+            obj.accept(and_visitor);
         }
         
-        L_x.addAll(or_visitor.get_rule_set());
+        L_x.addAll(and_visitor.get_rule_set());
 
         // Blocking
         if(this.Ĉ != null && this.blocking(L_parent, L_x)){
@@ -510,7 +517,7 @@ public class Reasoner {
             return true;
         }
 
-        added_joint = this.addall_axiom_to_abox(or_visitor.get_rule_set_and_reset(), x);
+        added_joint = this.addall_axiom_to_abox(and_visitor.get_rule_set_and_reset(), x);
 
         if(!this.check_not_clash(L_x)){
             clash_rollback(L_x, added_joint, x);
@@ -525,8 +532,8 @@ public class Reasoner {
 
         for(OWLObjectUnionOf obj : disjunctions){
             
-            obj.accept(and_visitor);
-            disjointed = and_visitor.get_rule_set_and_reset();
+            obj.accept(or_visitor);
+            disjointed = or_visitor.get_rule_set_and_reset();
             boolean is_present = false;
             for(OWLClassExpression disj : disjointed){
                 if(this.abox.contains(this.factory.getOWLClassAssertionAxiom((OWLClassExpression) disj, x))){
@@ -708,11 +715,11 @@ public class Reasoner {
         while(apply_lazy_unfolding){
             // Regola and
             for(OWLObject obj : L_x){
-                obj.accept(or_visitor);
+                obj.accept(and_visitor);
             }
             
-            L_x.addAll(or_visitor.get_rule_set());
-            added_conj_lazy.addAll(or_visitor.get_rule_set_and_reset());
+            L_x.addAll(and_visitor.get_rule_set());
+            added_conj_lazy.addAll(and_visitor.get_rule_set_and_reset());
 
             // Regole lazy unfolding
             added_lazy = this.lazy_unfolding_rules(L_x);
@@ -765,8 +772,8 @@ public class Reasoner {
             obj.accept(v);
             System.out.println();
             ////
-            obj.accept(and_visitor);
-            disjointed = and_visitor.get_rule_set_and_reset();
+            obj.accept(or_visitor);
+            disjointed = or_visitor.get_rule_set_and_reset();
             boolean is_present = false;
             for(OWLObject disj : disjointed){
                 if(this.abox.contains(this.factory.getOWLClassAssertionAxiom((OWLClassExpression) disj, x))){
@@ -949,11 +956,11 @@ public class Reasoner {
         while(apply_lazy_unfolding){
             // Regola and
             for(OWLObject obj : L_x){
-                obj.accept(or_visitor);
+                obj.accept(and_visitor);
             }
             
-            L_x.addAll(or_visitor.get_rule_set());
-            added_conj_lazy.addAll(or_visitor.get_rule_set_and_reset());
+            L_x.addAll(and_visitor.get_rule_set());
+            added_conj_lazy.addAll(and_visitor.get_rule_set_and_reset());
 
             // Regole lazy unfolding
             added_lazy = this.lazy_unfolding_rules(L_x);
@@ -984,8 +991,8 @@ public class Reasoner {
 
 
         for(OWLClassExpression obj : disjunctions){
-            obj.accept(and_visitor);
-            disjointed = and_visitor.get_rule_set_and_reset();
+            obj.accept(or_visitor);
+            disjointed = or_visitor.get_rule_set_and_reset();
             boolean is_present = false;
             for(OWLObject disj : disjointed){
                 if(this.abox.contains(this.factory.getOWLClassAssertionAxiom((OWLClassExpression) disj, x))){

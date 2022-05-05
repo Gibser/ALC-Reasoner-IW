@@ -19,22 +19,20 @@ import org.semanticweb.owlapi.model.OWLObjectVisitor;
 import org.semanticweb.owlapi.model.OWLSubClassOfAxiom;
 
 /**
-    OWLObjectVisitor che visita un assioma e, appena trova un or, verifica se tra i disgiunti c'è un TOP (come A or not(A))
-    oppure, appena trova un and, verifica se tra i congiunti c'è un BOTTOM (come A and not(A)).
+    OWLObjectVisitor che visita un assioma e, appena trova un or, verifica se tra i disgiunti c'e' un TOP (come A or not(A))
+    oppure, appena trova un and, verifica se tra i congiunti c'e' un BOTTOM (come A and not(A)).
     Ricostruisce ricorsivamente il nuovo assioma inserendo i vecchi assiomi se non cambiati
     oppure, nel caso di AND o OR, restituisce il nuovo assioma senza i BOTTOM (per gli or) e i TOP (per gli and)
-    o direttamente TOP (se c'è un TOP in un or) o BOTTOM (se c'è un BOTTOM in un and)
+    o direttamente TOP (se c'e' un TOP in un or) o BOTTOM (se c'e' un BOTTOM in un and)
 */
 public class OrAndPreprocessorVisitor implements OWLObjectVisitor{
 
     OWLClassExpression ret_expr = null;
     OWLLogicalAxiom new_axiom = null;
     private OWLDataFactory factory;
-    private PrinterVisitor v;
 
     public OrAndPreprocessorVisitor(){
         this.factory = OntologyPreprocessor.tbox_man.getOWLDataFactory();
-        this.v = new PrinterVisitor();
     }
 
 
@@ -46,39 +44,38 @@ public class OrAndPreprocessorVisitor implements OWLObjectVisitor{
         */
         HashSet<OWLClassExpression> operands = new HashSet<>();
 
-        for(OWLClassExpression c : union.getOperands()){
+        for (OWLClassExpression c : union.getOperands()) {
             c.accept(this);
             /*
             System.out.print("ret_expr or: ");
             ret_expr.accept(this.v);
             System.out.println();
             */
-            if(!ret_expr.equals(this.factory.getOWLThing())){
+            if (!ret_expr.equals(this.factory.getOWLThing())) {
                 OWLObjectComplementOf not_a = this.factory.getOWLObjectComplementOf(ret_expr);
 
-                if(ret_expr.equals(this.factory.getOWLNothing())) continue;
+                if (ret_expr.equals(this.factory.getOWLNothing()))
+                    continue;
 
-                if(!union.getOperands().contains(not_a.getNNF())) //&& !ret_expr.equals(this.factory.getOWLNothing()))
+                if (!union.getOperands().contains(not_a.getNNF())) //&& !ret_expr.equals(this.factory.getOWLNothing()))
                     operands.add(ret_expr);
-                else{
+                else {
                     ret_expr = this.factory.getOWLThing();
                     return;
                 }
-                
-            }
-            else
+
+            } else
                 return;
         }
 
-        if(operands.size() > 1){
+        if (operands.size() > 1) {
             ret_expr = this.factory.getOWLObjectUnionOf(operands);
             /*
             System.out.print("\nAggiungo: ");
             ret_expr.accept(this.v);
             System.out.println();
             */
-        }
-        else if(operands.size() == 1){
+        } else if (operands.size() == 1) {
             this.ret_expr = operands.iterator().next();
             /*
             System.out.print("\nAggiungo: ");
@@ -88,6 +85,7 @@ public class OrAndPreprocessorVisitor implements OWLObjectVisitor{
         }
     }
 
+    
     public void visit(OWLObjectIntersectionOf intersection) {
         /*
         System.out.print("\nProcesso ");
@@ -96,39 +94,38 @@ public class OrAndPreprocessorVisitor implements OWLObjectVisitor{
         */
         HashSet<OWLClassExpression> operands = new HashSet<>();
 
-        for(OWLClassExpression c : intersection.getOperands()){
+        for (OWLClassExpression c : intersection.getOperands()) {
             c.accept(this);
             /*
             System.out.print("ret_expr and: ");
             ret_expr.accept(this.v);
             System.out.println();
             */
-            if(!ret_expr.equals(this.factory.getOWLNothing())){
+            if (!ret_expr.equals(this.factory.getOWLNothing())) {
                 OWLObjectComplementOf not_a = this.factory.getOWLObjectComplementOf(ret_expr);
-                
-                if(ret_expr.equals(this.factory.getOWLThing())) continue;
 
-                if(!intersection.getOperands().contains(not_a.getNNF())) //&& !ret_expr.equals(this.factory.getOWLThing()))
+                if (ret_expr.equals(this.factory.getOWLThing()))
+                    continue;
+
+                if (!intersection.getOperands().contains(not_a.getNNF())) //&& !ret_expr.equals(this.factory.getOWLThing()))
                     operands.add(ret_expr);
-                else{
+                else {
                     ret_expr = this.factory.getOWLNothing();
                     return;
                 }
-                
-            }
-            else
+
+            } else
                 return;
         }
 
-        if(operands.size() > 1){
+        if (operands.size() > 1) {
             ret_expr = this.factory.getOWLObjectIntersectionOf(operands);
             /*
             System.out.print("\nAggiungo: ");
             ret_expr.accept(this.v);
             System.out.println();
             */
-        }
-        else if(operands.size() == 1){
+        } else if (operands.size() == 1) {
             this.ret_expr = operands.iterator().next();
             /*
             System.out.print("\nAggiungo: ");
@@ -138,6 +135,7 @@ public class OrAndPreprocessorVisitor implements OWLObjectVisitor{
         }
     }
 
+    
     public void visit(OWLClass class_expr) {
         this.ret_expr = class_expr;
     }
@@ -151,6 +149,7 @@ public class OrAndPreprocessorVisitor implements OWLObjectVisitor{
         new_axiom = this.factory.getOWLEquivalentClassesAxiom(ret1, ret_expr);
     }
     
+
     public void visit(OWLSubClassOfAxiom ax) {
         ax.getSubClass().accept(this);
         OWLClassExpression ret1 = ret_expr;
@@ -158,11 +157,13 @@ public class OrAndPreprocessorVisitor implements OWLObjectVisitor{
         new_axiom = this.factory.getOWLSubClassOfAxiom(ret1, ret_expr);
     }
     
+
     public void visit(OWLObjectSomeValuesFrom ce) {
         OWLClassExpression filler = ce.getFiller();
         filler.accept(this);
         ret_expr = this.factory.getOWLObjectSomeValuesFrom(ce.getProperty(), ret_expr);
     }
+
 
     public void visit(OWLObjectComplementOf ce) {
         ce.getOperand().accept(this);
@@ -176,8 +177,8 @@ public class OrAndPreprocessorVisitor implements OWLObjectVisitor{
         ret_expr = this.factory.getOWLObjectAllValuesFrom(ce.getProperty(), ret_expr);
     }
 
+
     public OWLLogicalAxiom getLogicalAxiom(){
         return this.new_axiom;
     }
-
 }
