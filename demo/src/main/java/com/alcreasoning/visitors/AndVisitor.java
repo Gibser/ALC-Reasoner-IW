@@ -30,9 +30,4 @@ public class AndVisitor implements OWLObjectVisitor{
         rule_set.clear();
         return temp;
     }
-
-    public HashSet<OWLClassExpression> get_rule_set(){
-        HashSet<OWLClassExpression> temp = new HashSet<>(rule_set);
-        return temp;
-    }
 }

@@ -242,7 +242,7 @@ public class Reasoner {
         return child_node;
     }
 
-    private void clash_rollback(HashSet<OWLObject> L_x, HashSet<OWLClassExpression> added, OWLNamedIndividual x, Node node, Resource node_rdf){
+    private void clash_rollback_all(HashSet<OWLObject> L_x, HashSet<OWLClassExpression> added, OWLNamedIndividual x, Node node, Resource node_rdf){
         // rimuovo congiunti da L_x
         L_x.removeAll(added);
         // rimuovo congiunti dall'ABox
@@ -253,47 +253,130 @@ public class Reasoner {
         node_rdf.addProperty(this.rdf_model.createProperty(this.ontology_iri + "/#clash"), "CLASH");
     }
 
-    private void clash_rollback(HashSet<OWLObject> L_x, HashSet<OWLClassExpression> added, OWLNamedIndividual x) {
+    private void clash_rollback_all(HashSet<OWLObject> L_x, HashSet<OWLClassExpression> added, OWLNamedIndividual x) {
         // rimuovo congiunti da L_x
         L_x.removeAll(added);
         // rimuovo congiunti dall'ABox
         this.removeall_axiom_from_abox(this.instantiateall_axiom(added, x));
     }
 
-    private void and_rule(HashSet<OWLObject> L_x) {
+    private void clash_rollback(HashSet<OWLObject> L_x, OWLClassExpression added, OWLNamedIndividual x) {
+        // rimuovo congiunto da L_x
+        L_x.remove(added);
+        // rimuovo congiunto dall'ABox
+        this.abox.remove(this.instantiate_axiom(added, x));
+    }
+
+    private HashSet<OWLClassExpression> and_rule(HashSet<OWLObject> L_x) {
+        HashSet<OWLClassExpression> added_items = new HashSet<>();
+
         for (OWLObject obj : L_x) {
             obj.accept(and_visitor);
         }
+
+        for (OWLClassExpression obj : and_visitor.get_rule_set_and_reset()) {
+            if (L_x.add(obj))
+                added_items.add(obj);
+        }
+        return added_items;
     }
 
+    private HashSet<OWLObject> exists_rule(HashSet<OWLObject> L_x, OWLNamedIndividual x, HashSet<OWLObject> L_child, OWLNamedIndividual child, OWLObjectSomeValuesFrom obj) {
+        HashSet<OWLObject> added_axioms = new HashSet<>();
+        OWLClassExpression filler = obj.getFiller();
+        OWLObjectPropertyExpression property = obj.getProperty();
+        OWLClassAssertionAxiom instantiated_axiom = this.instantiate_axiom(filler, child);
+        OWLObjectPropertyAssertionAxiom instantiated_property_axiom = this.instantiate_property_axiom(property, x, child);
+                
+        if(this.add_axiom_to_abox(instantiated_axiom))
+            added_axioms.add(instantiated_axiom);                                                                          // Si aggiunge C(child) all'ABox
+        
+        if(this.add_axiom_to_abox(instantiated_property_axiom))                                                            // Si aggiunge R(x, child) all'ABox 
+            added_axioms.add(instantiated_property_axiom);
+        
+        L_child.add(filler);                                                                                    // L(x') U {C};
+            
+        if (this.Ĉ != null) { // TBox non vuota: L(x') U {Ĉ}
+            L_child.add(this.Ĉ);
+            instantiated_axiom = this.instantiate_axiom(this.Ĉ, child);
+            if (this.add_axiom_to_abox(instantiated_axiom)) // Si aggiunge Ĉ(child) all'ABox
+                added_axioms.add(instantiated_axiom);
+        }
+
+        return added_axioms;
+    }
+    
+    private HashSet<OWLObject> all_values_rule(HashSet<OWLObjectAllValuesFrom> owl_all_values_set, HashSet<OWLObject> L_child, OWLNamedIndividual child, OWLObjectPropertyExpression property) {
+        HashSet<OWLObject> added_axioms = new HashSet<>();
+        owl_all_values_set.stream()                                                                             // forall R.D
+        .filter(e -> e.getProperty().equals(property))                                                      // Filtra i per ogni con la stessa relazione R
+        .forEach(e -> {
+                        L_child.add(e.getFiller());
+                        if(this.add_axiom_to_abox(e.getFiller(), child))                                    // cambiato x a child, va istanziato per il figlio, non per x
+                            added_axioms.add(this.instantiate_axiom(e.getFiller(), child));                 // cambiato x a child
+                            });
+                      
+        return added_axioms;
+    }
+    
+    private HashSet<OWLObjectUnionOf> disjunctions(HashSet<OWLObject> L_x) {
+        return L_x.stream().filter(e -> e instanceof OWLObjectUnionOf).map(e -> (OWLObjectUnionOf) e)
+                .collect(Collectors.toCollection(HashSet::new));
+    }
+    
+    private boolean or_rule_condition(HashSet<OWLClassExpression> elements, OWLNamedIndividual x) {
+        for (OWLClassExpression disj : elements) {
+            if (this.abox.contains(this.instantiate_axiom((OWLClassExpression) disj, x))) {
+                System.out.println("Trovato");
+                return false;
+            }
+        }
+        return true;
+    }
+
+    private boolean exists_rule_conditions(OWLObjectPropertyExpression property, OWLClassExpression filler, OWLNamedIndividual x){
+        boolean exists_rule_condition[] = {true};
+
+        this.abox.stream()                                                                                                                                  // exists R.C
+            .filter(e -> e instanceof OWLObjectPropertyAssertionAxiom)                                                                                      // Raccolgo tutte le relazioni
+            .map(e -> (OWLObjectPropertyAssertionAxiom)e)                                                                                                   // Cast    
+            .filter(e -> e.getProperty().equals(property))                                                                                                  // Filtro tutte le relazioni di tipo R    
+            .filter(e -> e.getSubject().equals(x))                                                                                                          // Filtro tutte le relazioni R da x a qualche z
+                .forEach(e -> {
+                    if (this.abox.contains(this.factory.getOWLClassAssertionAxiom(filler, e.getObject()))) {                                                // Filtro le relazioni tali che C(z)
+                        exists_rule_condition[0] = false;
+                    }
+                }); 
+
+        return exists_rule_condition[0];
+    }
+
+    
+    //Con grafo
     public boolean tableau_algorithm_non_empty_tbox(OWLNamedIndividual x, HashSet<OWLObject> L_parent, HashSet<OWLObject> L_x, Node node, Resource node_rdf){
         HashSet<OWLClassExpression> disjointed;
         HashSet<OWLObjectSomeValuesFrom> owl_some_values_set;
         HashSet<OWLObjectAllValuesFrom> owl_all_values_set;
         HashSet<OWLClassExpression> added_joint;
-        //HashMap<OWLObjectPropertyExpression, OWLClassExpression> properties_fillers = null;     // HashMap per conservare gli elementi <relazione, concetto>
         boolean clash_free = false;
 
-        and_rule(L_x);
-
-        L_x.addAll(and_visitor.get_rule_set());
+        added_joint = this.and_rule(L_x);
 
         // Blocking
-        if(this.Ĉ != null && this.blocking(L_parent, L_x)){
+        if (this.Ĉ != null && this.blocking(L_parent, L_x)) {
             System.out.println("Blocking");
             return true;
         }
 
+        this.addall_axiom_to_abox(added_joint, x);
+        
         // Grafo: Aggiungo L_x al nodo dopo regola AND
         node = this.graph_drawer.add_L_x_to_node(node, L_x, x.getIRI().getShortForm());
         // RDF
         node_rdf.addProperty(this.rdf_model.createProperty(this.ontology_iri + "/#L_x"), this.graph_drawer.return_set_as_string(L_x, "L_" + x.getIRI().getShortForm()));
-
-
-        added_joint = this.addall_axiom_to_abox(and_visitor.get_rule_set_and_reset(), x);
         
         if(!this.check_not_clash(L_x)){
-            clash_rollback(L_x, added_joint, x, node, node_rdf);
+            this.clash_rollback_all(L_x, added_joint, x, node, node_rdf);
             return false;
         }
         
@@ -310,14 +393,8 @@ public class Reasoner {
         System.out.println("Applicazione regola unione");
         System.out.println("-----------------------------------");
         ////
-        
-        HashSet<OWLObjectUnionOf> disjunctions;
 
-        disjunctions = L_x.stream().filter(e -> e instanceof OWLObjectUnionOf)
-                                  .map(e -> (OWLObjectUnionOf)e)
-                                  .collect(Collectors.toCollection(HashSet::new));
-
-        for(OWLObjectUnionOf obj : disjunctions){
+        for(OWLObjectUnionOf obj : this.disjunctions(L_x)){
             
             ////
             System.out.print("Processo ");
@@ -327,17 +404,9 @@ public class Reasoner {
             
             obj.accept(or_visitor);
             disjointed = or_visitor.get_rule_set_and_reset();
-            boolean is_present = false;
-            for(OWLClassExpression disj : disjointed){
-                if(this.abox.contains(this.factory.getOWLClassAssertionAxiom((OWLClassExpression) disj, x))){
-                    System.out.println("Trovato");
-                    is_present = true;
-                    break;
-                }
-            }
             
-            if(!is_present){
-                for(OWLObject disj : disjointed){
+            if(this.or_rule_condition(disjointed, x)){
+                for(OWLClassExpression disj : disjointed){
                     L_x.add(disj);
                     this.add_axiom_to_abox(disj, x);
                     
@@ -353,135 +422,72 @@ public class Reasoner {
                     Resource rdf_union_node = this.rdf_model.createResource();
                     node_rdf.addProperty(this.rdf_model.createProperty(this.ontology_iri + "/#union"), rdf_union_node);
 
-                    clash_free = tableau_algorithm_non_empty_tbox(x, null, L_x, this.last_child, rdf_union_node);
-                    if(clash_free){
-                        // Grafo
-                        //this.last_parent = this.last_child;
-                        //
+                    clash_free = this.tableau_algorithm_non_empty_tbox(x, null, L_x, this.last_child, rdf_union_node);
+                    
+                    if(clash_free)
                         break;
-                    }
-                    else{
-                        L_x.remove(disj);
-                        this.abox.remove(this.factory.getOWLClassAssertionAxiom((OWLClassExpression) disj, x));
-                    }
+                    else 
+                        this.clash_rollback(L_x, disj, x);
                 }
                 // Se finiscono i disgiunti e clash_free è ancora false, vuol dire che nessuna combinazione di disgiunti evita un clash, 
                 // quindi posso ritornare false
                 if(!clash_free){
-                    clash_rollback(L_x, added_joint, x);
+                    this.clash_rollback_all(L_x, added_joint, x);
                     System.out.println("Disgiunti terminati: " + clash_free + "\n");
                     return false;
                 }
-                
             }
 
             // Se ho trovato un ramo clash free, posso interrompere l'iterazione e ritornare true
             // altrimenti si procede con l'iterazione
-            if(clash_free){
-                return true;
-            }
-            
+            if(clash_free)
+                return true;            
         }
         // Controllo se localmente ci sono clash
         if(!(clash_free = this.check_not_clash(L_x))){
-            clash_rollback(L_x, added_joint, x, node, node_rdf);
+            this.clash_rollback_all(L_x, added_joint, x, node, node_rdf);
             return false;
         }
 
         owl_some_values_set = L_x.stream().filter(e -> (e instanceof OWLObjectSomeValuesFrom)).map(e -> (OWLObjectSomeValuesFrom)e).collect(Collectors.toCollection(HashSet::new));
         owl_all_values_set = L_x.stream().filter(e -> (e instanceof OWLObjectAllValuesFrom)).map(e -> (OWLObjectAllValuesFrom)e).collect(Collectors.toCollection(HashSet::new));
         
-
         System.out.println("-----------------------------------");
         System.out.println("Applicazione regola esiste");
         System.out.println("-----------------------------------");
         
-        /*
-        if(!owl_some_values_set.isEmpty()){
-            properties_fillers = new HashMap<>();
-        }
-        */
-
         for(OWLObjectSomeValuesFrom obj : owl_some_values_set){
-
             OWLClassExpression filler = obj.getFiller();
             OWLObjectPropertyExpression property = obj.getProperty();
-            boolean exists_rule_condition[] = {false};
             
-            /* Abbiamo interpretato male R some bottom
-            // Se nel nodo attuale ho processato un Property some bottom, non puó esserci un altro figlio di relazione Property, 
-            // oppure se ho processato un Property some C non posso trovare un Property some bottom, quindi insoddisfacibile
-            if(this.check_bottom(property, this.factory.getOWLNothing(), filler, properties_fillers) || 
-               this.check_bottom(property, filler, this.factory.getOWLNothing(), properties_fillers)  
-              ){
-                clash_rollback(L_x, added_joint, x, node, node_rdf);
-                return false;
+            if(filler.equals(this.factory.getOWLNothing())){                    // Non creo un figlio se il filler è bottom
+                this.clash_rollback_all(L_x, added_joint, x, node, node_rdf);
+                return false;                                          
             }
-            */
-            //properties_fillers.put(property, filler);
-            
-            if(filler.equals(this.factory.getOWLNothing())){
-                clash_rollback(L_x, added_joint, x, node, node_rdf);
-                return false;                                          // Non creo un figlio se il filler è bottom
-            }
-            
-            this.abox.stream()                                                                                                                                      // exists R.C
-                    .filter(e -> e instanceof OWLObjectPropertyAssertionAxiom)                                                                                      // Raccolgo tutte le relazioni
-                    .map(e -> (OWLObjectPropertyAssertionAxiom)e)                                                                                                   // Cast    
-                    .filter(e -> e.getProperty().equals(property))                                                                                                  // Filtro tutte le relazioni di tipo R    
-                    .filter(e -> e.getSubject().equals(x))                                                                                                          // Filtro tutte le relazioni R da x a qualche z
-                    .forEach(e -> {if(this.abox.contains(this.factory.getOWLClassAssertionAxiom(filler, e.getObject()))){ exists_rule_condition[0] = true;} });     // Filtro le relazioni tali che C(z)
-            
-            if(!exists_rule_condition[0]){
-                HashSet<OWLObject> added_axioms = new HashSet<>();
+
+            if(this.exists_rule_conditions(property, filler, x)){
+                HashSet<OWLObject> added_axioms;
                 HashSet<OWLObject> L_child = new HashSet<>();                                                           // L_child rappresenta L(x')
-                OWLNamedIndividual child = create_individual();                                                         // Creo nuovo figlio child
+                OWLNamedIndividual child = create_individual(); // Creo nuovo figlio child
 
-                OWLClassAssertionAxiom instantiated_axiom = this.instantiate_axiom(filler, child);
-                OWLObjectPropertyAssertionAxiom instantiated_property_axiom = this.instantiate_property_axiom(property, x, child);
-                
-                if(this.add_axiom_to_abox(instantiated_axiom))
-                    added_axioms.add(instantiated_axiom);                                                                          // Si aggiunge C(child) all'ABox
-                
-                if(this.add_axiom_to_abox(instantiated_property_axiom))                                                            // Si aggiunge R(x, child) all'ABox 
-                    added_axioms.add(instantiated_property_axiom);
-                
-                if(this.Ĉ != null){                                                                                                // TBox non vuota: L(x') U {Ĉ}
-                    L_child.add(this.Ĉ);        
-                    instantiated_axiom = this.instantiate_axiom(this.Ĉ, child);
-                    if(this.add_axiom_to_abox(instantiated_axiom))                                                                 // Si aggiunge Ĉ(child) all'ABox
-                        added_axioms.add(instantiated_axiom);
-                }
-
-                
-                L_child.add(filler);                                                                                    // L(x') U {C};
+                added_axioms = this.exists_rule(L_x, x, L_child, child, obj);
                                                                                                                         
-                
-
-                owl_all_values_set.stream()                                                                             // forall R.D
-                    .filter(e -> e.getProperty().equals(property))                                                      // Filtra i per ogni con la stessa relazione R
-                    .forEach(e -> {
-                                    L_child.add(e.getFiller());
-                                    if(this.add_axiom_to_abox(e.getFiller(), child))                                    // cambiato x a child, va istanziato per il figlio, non per x
-                                        added_axioms.add(this.instantiate_axiom(e.getFiller(), child));                 // cambiato x a child
-                                  });
+                added_axioms.addAll(this.all_values_rule(owl_all_values_set, L_child, child, property));
                 
                 // Grafo
-                //Node child_node = this.update_graph(false, node, child.getIRI().getShortForm(), property);
                 this.last_child = this.update_graph(false, node, x.getIRI().getShortForm(), child.getIRI().getShortForm(), property);
                 // RDF
                 this.last_child_rdf = this.rdf_model.createResource(child.getIRI().toString());
                 property.accept(this.return_visitor);
                 node_rdf.addProperty(this.rdf_model.createProperty(this.ontology_iri + "/#" + this.return_visitor.get_and_destroy_return_string()), this.last_child_rdf);
 
-                clash_free = tableau_algorithm_non_empty_tbox(child, L_x, L_child, this.last_child, this.last_child_rdf);
+                clash_free = this.tableau_algorithm_non_empty_tbox(child, L_x, L_child, this.last_child, this.last_child_rdf);
 
                 if(!clash_free){
-                    clash_rollback(L_x, added_joint, x);
+                    this.clash_rollback_all(L_x, added_joint, x);
                     this.removeall_axiom_from_abox(added_axioms);
                     return false;
                 }
-                
                 else{
                     node = this.last_child;
                     node_rdf = this.last_child_rdf;
@@ -502,14 +508,9 @@ public class Reasoner {
         HashSet<OWLObjectSomeValuesFrom> owl_some_values_set;
         HashSet<OWLObjectAllValuesFrom> owl_all_values_set;
         HashSet<OWLClassExpression> added_joint;
-        //HashMap<OWLObjectPropertyExpression, OWLClassExpression> properties_fillers = null;     // HashMap per conservare gli elementi <relazione, concetto>
         boolean clash_free = false;
         
-        for(OWLObject obj : L_x){
-            obj.accept(and_visitor);
-        }
-        
-        L_x.addAll(and_visitor.get_rule_set());
+        added_joint = this.and_rule(L_x);
 
         // Blocking
         if(this.Ĉ != null && this.blocking(L_parent, L_x)){
@@ -517,143 +518,74 @@ public class Reasoner {
             return true;
         }
 
-        added_joint = this.addall_axiom_to_abox(and_visitor.get_rule_set_and_reset(), x);
+        this.addall_axiom_to_abox(added_joint, x);
 
         if(!this.check_not_clash(L_x)){
-            clash_rollback(L_x, added_joint, x);
+            this.clash_rollback_all(L_x, added_joint, x);
             return false;
         }
         
-        HashSet<OWLObjectUnionOf> disjunctions;
-
-        disjunctions = L_x.stream().filter(e -> e instanceof OWLObjectUnionOf)
-                                  .map(e -> (OWLObjectUnionOf)e)
-                                  .collect(Collectors.toCollection(HashSet::new));
-
-        for(OWLObjectUnionOf obj : disjunctions){
+        for(OWLObjectUnionOf obj : this.disjunctions(L_x)){
             
             obj.accept(or_visitor);
             disjointed = or_visitor.get_rule_set_and_reset();
-            boolean is_present = false;
-            for(OWLClassExpression disj : disjointed){
-                if(this.abox.contains(this.factory.getOWLClassAssertionAxiom((OWLClassExpression) disj, x))){
-                    is_present = true;
-                    break;
-                }
-            }
             
-            if(!is_present){
-                for(OWLObject disj : disjointed){
+            if(this.or_rule_condition(disjointed, x)){
+                for(OWLClassExpression disj : disjointed){
                     L_x.add(disj);
                     this.add_axiom_to_abox(disj, x);
                     
-                    clash_free = tableau_algorithm_non_empty_tbox(x, null, L_x);
+                    clash_free = this.tableau_algorithm_non_empty_tbox(x, null, L_x);
                     
                     if(clash_free)
                         break; 
-                    else{
-                        L_x.remove(disj);
-                        this.abox.remove(this.factory.getOWLClassAssertionAxiom((OWLClassExpression) disj, x));
-                    }
+                    else
+                        this.clash_rollback(L_x, disj, x);
                 }
                 // Se finiscono i disgiunti e clash_free è ancora false, vuol dire che nessuna combinazione di disgiunti evita un clash, 
                 // quindi posso ritornare false
                 if(!clash_free){
-                    this.clash_rollback(L_x, added_joint, x);
+                    this.clash_rollback_all(L_x, added_joint, x);
                     return false;
                 }
-                
             }
-
             // Se ho trovato un ramo clash free, posso interrompere l'iterazione e ritornare true
             // altrimenti si procede con l'iterazione
-            if(clash_free){
+            if(clash_free)
                 return true;
-            }
-            
         }
         // Controllo se localmente ci sono clash
         if(!(clash_free = this.check_not_clash(L_x))){
-            clash_rollback(L_x, added_joint, x);
+            this.clash_rollback_all(L_x, added_joint, x);
             return false;
         }
 
         owl_some_values_set = L_x.stream().filter(e -> (e instanceof OWLObjectSomeValuesFrom)).map(e -> (OWLObjectSomeValuesFrom)e).collect(Collectors.toCollection(HashSet::new));
         owl_all_values_set = L_x.stream().filter(e -> (e instanceof OWLObjectAllValuesFrom)).map(e -> (OWLObjectAllValuesFrom)e).collect(Collectors.toCollection(HashSet::new));
-        
-        //this.print_class_expression_set(owl_some_values_set, "Esistenziali");
-        
-        /*
-        if(!owl_some_values_set.isEmpty()){
-            properties_fillers = new HashMap<>();
-        }
-        */
 
         for(OWLObjectSomeValuesFrom obj : owl_some_values_set){
 
             OWLClassExpression filler = obj.getFiller();
             OWLObjectPropertyExpression property = obj.getProperty();
-            boolean exists_rule_condition[] = {false};
-            
-            /*
-            // Se nel nodo attuale ho processato un Property some bottom, non puó esserci un altro figlio di relazione Property, 
-            // oppure se ho processato un Property some C non posso trovare un Property some bottom, quindi insoddisfacibile
-            if(this.check_bottom(property, this.factory.getOWLNothing(), filler, properties_fillers) || 
-               this.check_bottom(property, filler, this.factory.getOWLNothing(), properties_fillers)  
-              ){
-                clash_rollback(L_x, added_joint, x);
-                return false;
-            }
-            */
-            //properties_fillers.put(property, filler);
 
-            if(filler.equals(this.factory.getOWLNothing())){
-                this.clash_rollback(L_x, added_joint, x);
+            if (filler.equals(this.factory.getOWLNothing())) {
+                this.clash_rollback_all(L_x, added_joint, x);
                 return false;
             }
-            this.abox.stream()                                                                                                                                      // exists R.C
-                    .filter(e -> e instanceof OWLObjectPropertyAssertionAxiom)                                                                                      // Raccolgo tutte le relazioni
-                    .map(e -> (OWLObjectPropertyAssertionAxiom)e)                                                                                                   // Cast    
-                    .filter(e -> e.getProperty().equals(property))                                                                                                  // Filtro tutte le relazioni di tipo R    
-                    .filter(e -> e.getSubject().equals(x))                                                                                                          // Filtro tutte le relazioni R da x a qualche z
-                    .forEach(e -> {if(this.abox.contains(this.factory.getOWLClassAssertionAxiom(filler, e.getObject()))){ exists_rule_condition[0] = true;} });     // Filtro le relazioni tali che C(z)
             
-            if(!exists_rule_condition[0]){
+            if(this.exists_rule_conditions(property, filler, x)){
                 HashSet<OWLObject> added_axioms = new HashSet<>();
                 HashSet<OWLObject> L_child = new HashSet<>();                                                           // L_child rappresenta L(x')
                 OWLNamedIndividual child = create_individual();                                                         // Creo nuovo figlio child
         
-                OWLClassAssertionAxiom instantiated_axiom = this.instantiate_axiom(filler, child);
-                OWLObjectPropertyAssertionAxiom instantiated_property_axiom = this.instantiate_property_axiom(property, x, child);
+                added_axioms = this.exists_rule(L_x, x, L_child, child, obj);
+                                                                                                                        
+                added_axioms.addAll(this.all_values_rule(owl_all_values_set, L_child, child, property));
                 
-                if(this.add_axiom_to_abox(instantiated_axiom))
-                    added_axioms.add(instantiated_axiom);                                                                                   // Si aggiunge C(child) all'ABox
-                
-                if(this.add_axiom_to_abox(instantiated_property_axiom))                                                            // Si aggiunge R(x, child) all'ABox 
-                    added_axioms.add(instantiated_property_axiom);
-                
-
-                L_child.add(filler);
-
-                if(this.Ĉ != null){                                                                                                // TBox non vuota: L(x') U {Ĉ}
-                    L_child.add(this.Ĉ);        
-                    instantiated_axiom = this.instantiate_axiom(this.Ĉ, child);
-                    if(this.add_axiom_to_abox(instantiated_axiom))                                                                 // Si aggiunge Ĉ(child) all'ABox: L(x') U {C};
-                        added_axioms.add(instantiated_axiom);
-                }
-
-                owl_all_values_set.stream()                                                                             // forall R.D
-                    .filter(e -> e.getProperty().equals(property))                                                      // Filtra i per ogni con la stessa relazione R
-                    .forEach(e -> {
-                                    L_child.add(e.getFiller());
-                                    if(this.add_axiom_to_abox(e.getFiller(), child))                                    // cambiato x a child, va istanziato per il figlio, non per x
-                                        added_axioms.add(this.instantiate_axiom(e.getFiller(), child));                 // cambiato x a child
-                                  });
-                
-                clash_free = tableau_algorithm_non_empty_tbox(child, L_x, L_child);
+                clash_free = this.tableau_algorithm_non_empty_tbox(child, L_x, L_child);
 
                 if(!clash_free){
-                    clash_rollback(L_x, added_joint, x);
+                    this.clash_rollback_all(L_x, added_joint, x);
                     this.removeall_axiom_from_abox(added_axioms);
                     return false;
                 }
@@ -701,7 +633,7 @@ public class Reasoner {
         return false;
     }
 
-
+    //Con grafo
     public boolean tableau_algorithm_non_empty_tbox_lazy_unfolding(OWLNamedIndividual x, HashSet<OWLObject> L_parent, HashSet<OWLObject> L_x, Node node, Resource node_rdf){
         HashSet<OWLClassExpression> disjointed;
         HashSet<OWLObjectSomeValuesFrom> owl_some_values_set;
@@ -710,17 +642,11 @@ public class Reasoner {
         HashSet<OWLClassExpression> added_lazy = new HashSet<>();
         boolean clash_free = false;
         boolean apply_lazy_unfolding = true;
-        //HashMap<OWLObjectPropertyExpression, OWLClassExpression> properties_fillers = null;     // HashMap per conservare gli elementi <relazione, concetto>
-        
+    
         while(apply_lazy_unfolding){
-            // Regola and
-            for(OWLObject obj : L_x){
-                obj.accept(and_visitor);
-            }
-            
-            L_x.addAll(and_visitor.get_rule_set());
-            added_conj_lazy.addAll(and_visitor.get_rule_set_and_reset());
 
+            added_conj_lazy.addAll(this.and_rule(L_x));
+            
             // Regole lazy unfolding
             added_lazy = this.lazy_unfolding_rules(L_x);
             added_conj_lazy.addAll(added_lazy);
@@ -744,7 +670,7 @@ public class Reasoner {
         this.addall_axiom_to_abox(added_conj_lazy, x);
 
         if(!this.check_not_clash(L_x)){
-            clash_rollback(L_x, added_conj_lazy, x, node, node_rdf);
+            this.clash_rollback_all(L_x, added_conj_lazy, x, node, node_rdf);
             return false;
         }
 
@@ -759,14 +685,7 @@ public class Reasoner {
         System.out.println("-----------------------------------");
         ////
 
-        HashSet<OWLObjectUnionOf> disjunctions;
-
-        disjunctions = L_x.stream().filter(e -> e instanceof OWLObjectUnionOf)
-                                  .map(e -> (OWLObjectUnionOf)e)
-                                  .collect(Collectors.toCollection(HashSet::new));
-
-
-        for(OWLClassExpression obj : disjunctions){
+        for(OWLClassExpression obj : this.disjunctions(L_x)){
             ////
             System.out.print("Processo ");
             obj.accept(v);
@@ -774,16 +693,9 @@ public class Reasoner {
             ////
             obj.accept(or_visitor);
             disjointed = or_visitor.get_rule_set_and_reset();
-            boolean is_present = false;
-            for(OWLObject disj : disjointed){
-                if(this.abox.contains(this.factory.getOWLClassAssertionAxiom((OWLClassExpression) disj, x))){
-                    is_present = true;
-                    break;
-                }
-            }
             
-            if(!is_present){
-                for(OWLObject disj : disjointed){
+            if(this.or_rule_condition(disjointed, x)){
+                for(OWLClassExpression disj : disjointed){
                     L_x.add(disj);
                     this.add_axiom_to_abox(disj, x);
                     ////
@@ -798,39 +710,30 @@ public class Reasoner {
                     this.last_child_rdf = this.rdf_model.createResource();
                     node_rdf.addProperty(this.rdf_model.createProperty(this.ontology_iri + "/#union"), this.last_child_rdf);
 
-
                     clash_free = this.tableau_algorithm_non_empty_tbox_lazy_unfolding(x, null, L_x, this.last_child, this.last_child_rdf);
 
-                    if(clash_free){
-                        // Grafo
-                        //this.last_parent = this.last_child;
-                        //
+                    if(clash_free)
                         break;
-                    }
-                    else{
-                        L_x.remove(disj);
-                        this.abox.remove(this.factory.getOWLClassAssertionAxiom((OWLClassExpression) disj, x));
-                    }
+                    else
+                        this.clash_rollback(L_x, disj, x);
                 }
                 // Se finiscono i disgiunti e clash_free è ancora false, vuol dire che nessuna combinazione di disgiunti evita un clash, 
                 // quindi posso ritornare false
                 if(!clash_free){
                     System.out.println("Disgiunti terminati: " + clash_free + "\n");
-                    this.clash_rollback(L_x, added_conj_lazy, x);
+                    this.clash_rollback_all(L_x, added_conj_lazy, x);
                     return false;
                 }
             }
             // Se ho trovato un ramo clash free, posso interrompere l'iterazione e ritornare true
             // altrimenti si procede con l'iterazione
             
-            if(clash_free){
+            if(clash_free)
                 return true;
-            }
-            
         }
         // Controllo se localmente ci sono clash
         if(!(clash_free = this.check_not_clash(L_x))){
-            clash_rollback(L_x, added_conj_lazy, x, node, node_rdf);
+            this.clash_rollback_all(L_x, added_conj_lazy, x, node, node_rdf);
             return false;
         }
 
@@ -842,73 +745,25 @@ public class Reasoner {
         System.out.println("Applicazione regola esiste");
         System.out.println("-----------------------------------");
 
-        /*
-        if(!owl_some_values_set.isEmpty()){
-            properties_fillers = new HashMap<>();
-        }
-        */
-
         for(OWLObjectSomeValuesFrom obj : owl_some_values_set){
             OWLClassExpression filler = obj.getFiller();
             OWLObjectPropertyExpression property = obj.getProperty();
-            boolean exists_rule_condition[] = {false};
 
-            /*
-            // Se nel nodo attuale ho processato un Property some bottom, non puó esserci un altro figlio di relazione Property, 
-            // oppure se ho processato un Property some C non posso trovare un Property some bottom, quindi insoddisfacibile
-            if(this.check_bottom(property, this.factory.getOWLNothing(), filler, properties_fillers) || 
-               this.check_bottom(property, filler, this.factory.getOWLNothing(), properties_fillers)  
-              ){
-                clash_rollback(L_x, added_conj_lazy, x, node, node_rdf);
+            if(filler.equals(this.factory.getOWLNothing())){                            // Non creo un figlio se il filler è bottom
+                this.clash_rollback_all(L_x, added_conj_lazy, x, node, node_rdf);
                 return false;
             }
-            */
-
-            //properties_fillers.put(property, filler);
-
-            if(filler.equals(this.factory.getOWLNothing()))
-                continue;
-
-            this.abox.stream()                                                                                                                                      // exists R.C
-                .filter(e -> e instanceof OWLObjectPropertyAssertionAxiom)                                                                                      // Raccolgo tutte le relazioni
-                .map(e -> (OWLObjectPropertyAssertionAxiom)e)                                                                                                   // Cast    
-                .filter(e -> e.getProperty().equals(property))                                                                                                  // Filtro tutte le relazioni di tipo R    
-                .filter(e -> e.getSubject().equals(x))                                                                                                          // Filtro tutte le relazioni R da x a qualche z
-                .forEach(e -> {if(this.abox.contains(this.factory.getOWLClassAssertionAxiom(filler, e.getObject()))){ exists_rule_condition[0] = true;} });     // Filtro le relazioni tali che C(z)
-
-            if(!exists_rule_condition[0]){
+            
+            if(this.exists_rule_conditions(property, filler, x)){
                 
                 HashSet<OWLObject> added_axioms = new HashSet<>();
                 HashSet<OWLObject> L_child = new HashSet<>();                                                           // L_child rappresenta L(x')
                 OWLNamedIndividual child = create_individual();                                                         // Creo nuovo figlio child
 
-                OWLClassAssertionAxiom instantiated_axiom = this.instantiate_axiom(filler, child);
-                OWLObjectPropertyAssertionAxiom instantiated_property_axiom = this.instantiate_property_axiom(property, x, child);
+                added_axioms = this.exists_rule(L_x, x, L_child, child, obj);
+                                                                                                                        
+                added_axioms.addAll(this.all_values_rule(owl_all_values_set, L_child, child, property));
                 
-                if(this.add_axiom_to_abox(instantiated_axiom))
-                    added_axioms.add(instantiated_axiom);                                                                          // Si aggiunge C(child) all'ABox
-                
-                if(this.add_axiom_to_abox(instantiated_property_axiom))                                                            // Si aggiunge R(x, child) all'ABox 
-                    added_axioms.add(instantiated_property_axiom);
-                
-                if(this.Ĉ != null){                                                                                                // TBox non vuota: L(x') U {Ĉ}
-                    L_child.add(this.Ĉ);        
-                    instantiated_axiom = this.instantiate_axiom(this.Ĉ, child);
-                    if(this.add_axiom_to_abox(instantiated_axiom))                                                                 // Si aggiunge Ĉ(child) all'ABox
-                        added_axioms.add(instantiated_axiom);
-                }
-
-                L_child.add(filler);                                                                                               // L(x') U {C};
-              
-
-                owl_all_values_set.stream()                                                                                      // forall R.D
-                    .filter(e -> e.getProperty().equals(property))                                                               // Filtra i per ogni con la stessa relazione R
-                    .forEach(e -> {
-                                    L_child.add(e.getFiller());
-                                    if(this.add_axiom_to_abox(e.getFiller(), child)) 
-                                        added_axioms.add(this.instantiate_axiom(e.getFiller(), child));
-                                  });
-
                 // Grafo
                 this.last_child = this.update_graph(false, node, x.getIRI().getShortForm(), child.getIRI().getShortForm(), property);
                 // RDF
@@ -916,10 +771,10 @@ public class Reasoner {
                 property.accept(this.return_visitor);
                 node_rdf.addProperty(this.rdf_model.createProperty(this.ontology_iri + "/#" + this.return_visitor.get_and_destroy_return_string()), this.last_child_rdf);
                   
-                clash_free = tableau_algorithm_non_empty_tbox_lazy_unfolding(child, L_x, L_child, this.last_child, this.last_child_rdf);
+                clash_free = this.tableau_algorithm_non_empty_tbox_lazy_unfolding(child, L_x, L_child, this.last_child, this.last_child_rdf);
 
                 if(!clash_free){
-                    clash_rollback(L_x, added_conj_lazy, x);
+                    this.clash_rollback_all(L_x, added_conj_lazy, x);
                     this.removeall_axiom_from_abox(added_axioms);
                     return false;
                 }
@@ -934,15 +789,7 @@ public class Reasoner {
         return clash_free;
     }
 
-    private void print_class_expression_set(HashSet<? extends OWLClassExpression> expr_set, String name){
-        System.out.print(name + " = {");
-        for(OWLClassExpression expr : expr_set){
-            expr.accept(this.v);
-            System.out.print(", ");
-        }
-        System.out.println("}");
-    }
-
+    //Senza grafo
     public boolean tableau_algorithm_non_empty_tbox_lazy_unfolding(OWLNamedIndividual x, HashSet<OWLObject> L_parent, HashSet<OWLObject> L_x){
         HashSet<OWLClassExpression> disjointed;
         HashSet<OWLObjectSomeValuesFrom> owl_some_values_set;
@@ -951,16 +798,10 @@ public class Reasoner {
         HashSet<OWLClassExpression> added_lazy = new HashSet<>();
         boolean clash_free = false;
         boolean apply_lazy_unfolding = true;
-        //HashMap<OWLObjectPropertyExpression, OWLClassExpression> properties_fillers = null;     // HashMap per conservare gli elementi <relazione, concetto>
 
         while(apply_lazy_unfolding){
-            // Regola and
-            for(OWLObject obj : L_x){
-                obj.accept(and_visitor);
-            }
             
-            L_x.addAll(and_visitor.get_rule_set());
-            added_conj_lazy.addAll(and_visitor.get_rule_set_and_reset());
+            added_conj_lazy.addAll(this.and_rule(L_x));
 
             // Regole lazy unfolding
             added_lazy = this.lazy_unfolding_rules(L_x);
@@ -979,143 +820,85 @@ public class Reasoner {
         this.addall_axiom_to_abox(added_conj_lazy, x);
 
         if(!this.check_not_clash(L_x)){
-            clash_rollback(L_x, added_conj_lazy, x);
+            this.clash_rollback_all(L_x, added_conj_lazy, x);
             return false;
         }
 
-        HashSet<OWLObjectUnionOf> disjunctions;
-
-        disjunctions = L_x.stream().filter(e -> e instanceof OWLObjectUnionOf)
-                                  .map(e -> (OWLObjectUnionOf)e)
-                                  .collect(Collectors.toCollection(HashSet::new));
-
-
-        for(OWLClassExpression obj : disjunctions){
+        for(OWLClassExpression obj : this.disjunctions(L_x)){
             obj.accept(or_visitor);
             disjointed = or_visitor.get_rule_set_and_reset();
-            boolean is_present = false;
-            for(OWLObject disj : disjointed){
-                if(this.abox.contains(this.factory.getOWLClassAssertionAxiom((OWLClassExpression) disj, x))){
-                    is_present = true;
-                    break;
-                }
-            }
             
-            if(!is_present){
-                for(OWLObject disj : disjointed){
+            if(this.or_rule_condition(disjointed, x)){
+                for(OWLClassExpression disj : disjointed){
                     L_x.add(disj);
                     this.add_axiom_to_abox(disj, x);
 
                     clash_free = this.tableau_algorithm_non_empty_tbox_lazy_unfolding(x, null, L_x);
 
-                    if(clash_free){
+                    if(clash_free)
                         break;
-                    }
-                    else{
-                        L_x.remove(disj);
-                        this.abox.remove(this.factory.getOWLClassAssertionAxiom((OWLClassExpression) disj, x));
-                    }
+                    else
+                        this.clash_rollback(L_x, disj, x);                        
                 }
                 // Se finiscono i disgiunti e clash_free è ancora false, vuol dire che nessuna combinazione di disgiunti evita un clash, 
                 // quindi posso ritornare false
                 if(!clash_free){
-                    this.clash_rollback(L_x, added_conj_lazy, x);
+                    this.clash_rollback_all(L_x, added_conj_lazy, x);
                     return false;
                 }
             }
             // Se ho trovato un ramo clash free, posso interrompere l'iterazione e ritornare true
             // altrimenti si procede con l'iterazione
             
-            if(clash_free){
+            if(clash_free)
                 return true;
-            }
-            
         }
         // Controllo se localmente ci sono clash
         if(!(clash_free = this.check_not_clash(L_x))){
-            clash_rollback(L_x, added_conj_lazy, x);
+            this.clash_rollback_all(L_x, added_conj_lazy, x);
             return false;
         }
 
         owl_some_values_set = L_x.stream().filter(e -> (e instanceof OWLObjectSomeValuesFrom)).map(e -> (OWLObjectSomeValuesFrom)e).collect(Collectors.toCollection(HashSet::new));
         owl_all_values_set = L_x.stream().filter(e -> (e instanceof OWLObjectAllValuesFrom)).map(e -> (OWLObjectAllValuesFrom)e).collect(Collectors.toCollection(HashSet::new));
         
-        /*
-        if(!owl_some_values_set.isEmpty()){
-            properties_fillers = new HashMap<>();
-        }
-        */
-        
         for(OWLObjectSomeValuesFrom obj : owl_some_values_set){
             OWLClassExpression filler = obj.getFiller();
             OWLObjectPropertyExpression property = obj.getProperty();
-            boolean exists_rule_condition[] = {false};
 
-            /*
-            // Se nel nodo attuale ho processato un Property some bottom, non puó esserci un altro figlio di relazione Property, 
-            // oppure se ho processato un Property some C non posso trovare un Property some bottom, quindi insoddisfacibile
-            if(this.check_bottom(property, this.factory.getOWLNothing(), filler, properties_fillers) || 
-               this.check_bottom(property, filler, this.factory.getOWLNothing(), properties_fillers)  
-              ){
-                clash_rollback(L_x, added_conj_lazy, x);
+            if (filler.equals(this.factory.getOWLNothing())) {              // Non creo un figlio se il filler è bottom
+                this.clash_rollback_all(L_x, added_conj_lazy, x);
                 return false;
             }
-            */
-
-            //properties_fillers.put(property, filler);
-
-            if(filler.equals(this.factory.getOWLNothing()))
-                continue;
-
-            this.abox.stream()                                                                                                                                      // exists R.C
-                .filter(e -> e instanceof OWLObjectPropertyAssertionAxiom)                                                                                      // Raccolgo tutte le relazioni
-                .map(e -> (OWLObjectPropertyAssertionAxiom)e)                                                                                                   // Cast    
-                .filter(e -> e.getProperty().equals(property))                                                                                                  // Filtro tutte le relazioni di tipo R    
-                .filter(e -> e.getSubject().equals(x))                                                                                                          // Filtro tutte le relazioni R da x a qualche z
-                .forEach(e -> {if(this.abox.contains(this.factory.getOWLClassAssertionAxiom(filler, e.getObject()))){ exists_rule_condition[0] = true;} });     // Filtro le relazioni tali che C(z)
-
-            if(exists_rule_condition[0]){
+            
+            if(this.exists_rule_conditions(property, filler, x)){
                 HashSet<OWLObject> added_axioms = new HashSet<>();
                 HashSet<OWLObject> L_child = new HashSet<>();                                                           // L_child rappresenta L(x')
                 OWLNamedIndividual child = create_individual();                                                         // Creo nuovo figlio child
 
-                OWLClassAssertionAxiom instantiated_axiom = this.instantiate_axiom(filler, child);
-                OWLObjectPropertyAssertionAxiom instantiated_property_axiom = this.instantiate_property_axiom(property, x, child);
-                
-                if(this.add_axiom_to_abox(instantiated_axiom))
-                    added_axioms.add(instantiated_axiom);                                                                          // Si aggiunge C(child) all'ABox
-                
-                if(this.add_axiom_to_abox(instantiated_property_axiom))                                                            // Si aggiunge R(x, child) all'ABox 
-                    added_axioms.add(instantiated_property_axiom);
-                
-                if(this.Ĉ != null){                                                                                                // TBox non vuota: L(x') U {Ĉ}
-                    L_child.add(this.Ĉ);        
-                    instantiated_axiom = this.instantiate_axiom(this.Ĉ, child);
-                    if(this.add_axiom_to_abox(instantiated_axiom))                                                                 // Si aggiunge Ĉ(child) all'ABox
-                        added_axioms.add(instantiated_axiom);
-                }
+                added_axioms = this.exists_rule(L_x, x, L_child, child, obj);
+                                                                                                                        
+                added_axioms.addAll(this.all_values_rule(owl_all_values_set, L_child, child, property));
 
-                L_child.add(filler);                                                                                               // L(x') U {C};
-
-                owl_all_values_set.stream()                                                                                      // forall R.D
-                    .filter(e -> e.getProperty().equals(property))                                                      // Filtra i per ogni con la stessa relazione R
-                    .forEach(e -> {
-                                    L_child.add(e.getFiller());
-                                    if(this.add_axiom_to_abox(e.getFiller(), child)) 
-                                        added_axioms.add(this.instantiate_axiom(e.getFiller(), child));
-                                  });
-
-
-                clash_free = tableau_algorithm_non_empty_tbox_lazy_unfolding(child, L_x, L_child);
+                clash_free = this.tableau_algorithm_non_empty_tbox_lazy_unfolding(child, L_x, L_child);
 
                 if(!clash_free){
-                    clash_rollback(L_x, added_conj_lazy, x);
+                    this.clash_rollback_all(L_x, added_conj_lazy, x);
                     this.removeall_axiom_from_abox(added_axioms);
                     return false;
                 }
             }
         }
         return clash_free;
+    }
+    
+    private void print_class_expression_set(HashSet<? extends OWLClassExpression> expr_set, String name) {
+        System.out.print(name + " = {");
+        for (OWLClassExpression expr : expr_set) {
+            expr.accept(this.v);
+            System.out.print(", ");
+        }
+        System.out.println("}");
     }
 
     public boolean tableau_algorithm(boolean lazy_unfolding){
@@ -1195,5 +978,4 @@ public class Reasoner {
         System.out.println("\nElapsed Time: "+ Duration.between(start, end).toMillis()+"ms");
         return clash_free;
     }
-
 }
