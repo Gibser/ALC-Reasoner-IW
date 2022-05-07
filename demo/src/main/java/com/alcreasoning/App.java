@@ -104,20 +104,20 @@ public final class App {
         Reasoner r;
 
         if(lazy_unfolding){
-            Pair<HashSet<OWLLogicalAxiom>, HashSet<OWLLogicalAxiom>> partition = preprocessor.partition_TBox();
+            Pair<HashSet<OWLLogicalAxiom>, HashSet<OWLLogicalAxiom>> T_g_and_T_u = preprocessor.partition_TBox();
 
             //////Fase di stampa di T_g e T_u
             System.out.print("\nT_g = {");
-            partition.getKey().stream().forEach(e -> {e.accept(AllVisitors.printer_visitor); System.out.print(", ");});
+            T_g_and_T_u.getKey().stream().forEach(e -> {e.accept(AllVisitors.printer_visitor); System.out.print(", ");});
             System.out.println("}");
 
             System.out.print("T_u = {");
-            partition.getValue().stream().forEach(e -> {e.accept(AllVisitors.printer_visitor); System.out.print(", ");});
+            T_g_and_T_u.getValue().stream().forEach(e -> {e.accept(AllVisitors.printer_visitor); System.out.print(", ");});
             System.out.println("}");
             //////
 
-            Pair<OWLClassExpression, Pair<HashSet<OWLClassExpression>, HashSet<OWLClassExpression>>> KB_and_Ĉ = preprocessor.preprocess_tbox_and_concept(partition.getKey());
-            r = new Reasoner(KB_and_Ĉ.getKey(), partition.getValue(), KB_and_Ĉ.getValue().getKey(), KB_and_Ĉ.getValue().getValue(), preprocessor.get_tbox_ontology_IRI(), draw_graph);
+            Pair<OWLClassExpression, Pair<HashSet<OWLClassExpression>, HashSet<OWLClassExpression>>> KB_and_Ĉ = preprocessor.preprocess_tbox_and_concept(T_g_and_T_u.getKey());
+            r = new Reasoner(KB_and_Ĉ.getKey(), T_g_and_T_u.getValue(), KB_and_Ĉ.getValue().getKey(), KB_and_Ĉ.getValue().getValue(), preprocessor.get_tbox_ontology_IRI(), draw_graph);
         }
         else{
             preprocessor.preprocess_and_or_tbox();

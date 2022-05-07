@@ -100,7 +100,7 @@ public class OntologyPreprocessor {
     }
 
     private OWLClassExpression preprocess_subclassof(OWLSubClassOfAxiom subclassof){
-        OWLClassExpression not_a = this.factory.getOWLObjectComplementOf(subclassof.getSubClass()).getNNF();
+        OWLClassExpression not_a = subclassof.getSubClass().getComplementNNF();
         OWLClassExpression b = subclassof.getSuperClass();
         HashSet<OWLClassExpression> operands = new HashSet<>();
         
@@ -115,11 +115,7 @@ public class OntologyPreprocessor {
         else
             operands.add(b);
         
-        OWLClassExpression preprocess_subclass;
-        if(operands.size() > 1)
-            preprocess_subclass = this.factory.getOWLObjectUnionOf(operands);
-        else
-            preprocess_subclass = operands.iterator().next();
+        OWLClassExpression preprocess_subclass = this.factory.getOWLObjectUnionOf(operands);
             
         return preprocess_subclass; 
     }
@@ -203,7 +199,7 @@ public class OntologyPreprocessor {
             System.out.println();
             ///
             if(ax instanceof OWLSubClassOfAxiom)
-                preprocessed_tbox.add(preprocess_subclassof((OWLSubClassOfAxiom)ax.getNNF()));
+                preprocessed_tbox.add(this.preprocess_subclassof((OWLSubClassOfAxiom)ax.getNNF()));
             else if(ax instanceof OWLEquivalentClassesAxiom)
                 preprocessed_tbox.addAll(this.preprocess_equivalence((OWLEquivalentClassesAxiom)ax.getNNF()));
             /*
