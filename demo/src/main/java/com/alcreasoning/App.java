@@ -27,6 +27,8 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 
+import javax.swing.plaf.TreeUI;
+
 public final class App {
     private App() {
     }
@@ -56,9 +58,9 @@ public final class App {
             System.out.println();
         }
 
-        Reasoner r = build_reasoner_for_tableau(false, preproc, true);
+        Reasoner r = build_reasoner_for_tableau(true, preproc, true);
 
-        System.out.println(r.check_consistency("./graphs/", false));
+        System.out.println(r.check_consistency("./graphs/", true));
     }
     
 
