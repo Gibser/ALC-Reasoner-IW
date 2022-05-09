@@ -786,6 +786,9 @@ public class Reasoner {
         }
         System.out.println("Fine chiamata nodo x_" + node_index);
         System.out.println("Clash free: " + clash_free);
+        
+        this.graph_drawer.add_new_child(node);
+
         return clash_free;
     }
 

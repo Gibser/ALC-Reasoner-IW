@@ -56,9 +56,9 @@ public final class App {
             System.out.println();
         }
 
-        Reasoner r = build_reasoner_for_tableau(true, preproc, true);
+        Reasoner r = build_reasoner_for_tableau(false, preproc, true);
 
-        System.out.println(r.check_consistency("./graphs/", true));
+        System.out.println(r.check_consistency("./graphs/", false));
     }
     
 

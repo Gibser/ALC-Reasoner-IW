@@ -100,7 +100,7 @@ public class OntologyPreprocessor {
     }
 
     private OWLClassExpression preprocess_subclassof(OWLSubClassOfAxiom subclassof){
-        OWLClassExpression not_a = subclassof.getSubClass().getComplementNNF();
+        OWLClassExpression not_a = this.factory.getOWLObjectComplementOf(subclassof.getSubClass()).getNNF();
         OWLClassExpression b = subclassof.getSuperClass();
         HashSet<OWLClassExpression> operands = new HashSet<>();
         
