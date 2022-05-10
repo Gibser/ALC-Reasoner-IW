@@ -35,7 +35,7 @@ public final class App {
 
     public static void main(String[] args) {
 
-        OntologyPreprocessor preproc = new OntologyPreprocessor("midgard.owl");
+        OntologyPreprocessor preproc = new OntologyPreprocessor("exam.owl");
         Pair<OWLClass, OWLClassExpression> concept = null;
 
         try {
