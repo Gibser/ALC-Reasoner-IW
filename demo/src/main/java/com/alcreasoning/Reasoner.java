@@ -327,7 +327,6 @@ public class Reasoner {
     private boolean or_rule_condition(HashSet<OWLClassExpression> elements, OWLNamedIndividual x) {
         for (OWLClassExpression disj : elements) {
             if (this.abox.contains(this.instantiate_axiom((OWLClassExpression) disj, x))) {
-                System.out.println("Trovato");
                 return false;
             }
         }
@@ -650,7 +649,6 @@ public class Reasoner {
             // Regole lazy unfolding
             added_lazy = this.lazy_unfolding_rules(L_x);
             added_conj_lazy.addAll(added_lazy);
-            this.print_class_expression_set(added_lazy, "added_lazy");
             
             if(!this.contains_and(added_lazy))
                 apply_lazy_unfolding = false;
@@ -674,23 +672,7 @@ public class Reasoner {
             return false;
         }
 
-        ////
-        System.out.println();
-        System.out.println("############# Chiamata ricorsiva #############");
-        System.out.print("Inizio chiamata. ");
-        this.print_L_x(L_x);
-        this.print_abox();
-        System.out.println("-----------------------------------");
-        System.out.println("Applicazione regola unione");
-        System.out.println("-----------------------------------");
-        ////
-
         for(OWLClassExpression obj : this.disjunctions(L_x)){
-            ////
-            System.out.print("Processo ");
-            obj.accept(v);
-            System.out.println();
-            ////
             obj.accept(or_visitor);
             disjointed = or_visitor.get_rule_set_and_reset();
             
@@ -698,11 +680,6 @@ public class Reasoner {
                 for(OWLClassExpression disj : disjointed){
                     L_x.add(disj);
                     this.add_axiom_to_abox(disj, x);
-                    ////
-                    System.out.print("Aggiungo ");
-                    disj.accept(this.v);
-                    System.out.println();
-                    ////
 
                     // Grafo
                     this.last_child = this.update_graph(true, node, null, x.getIRI().getShortForm(), null);
@@ -720,7 +697,6 @@ public class Reasoner {
                 // Se finiscono i disgiunti e clash_free è ancora false, vuol dire che nessuna combinazione di disgiunti evita un clash, 
                 // quindi posso ritornare false
                 if(!clash_free){
-                    System.out.println("Disgiunti terminati: " + clash_free + "\n");
                     this.clash_rollback_all(L_x, added_conj_lazy, x);
                     return false;
                 }
@@ -740,10 +716,6 @@ public class Reasoner {
         owl_some_values_set = L_x.stream().filter(e -> (e instanceof OWLObjectSomeValuesFrom)).map(e -> (OWLObjectSomeValuesFrom)e).collect(Collectors.toCollection(HashSet::new));
         owl_all_values_set = L_x.stream().filter(e -> (e instanceof OWLObjectAllValuesFrom)).map(e -> (OWLObjectAllValuesFrom)e).collect(Collectors.toCollection(HashSet::new));
         
-        this.print_class_expression_set(owl_some_values_set, "Esistenziali");
-        System.out.println("-----------------------------------");
-        System.out.println("Applicazione regola esiste");
-        System.out.println("-----------------------------------");
 
         for(OWLObjectSomeValuesFrom obj : owl_some_values_set){
             OWLClassExpression filler = obj.getFiller();
@@ -784,8 +756,6 @@ public class Reasoner {
                 }
             }
         }
-        System.out.println("Fine chiamata nodo x_" + node_index);
-        System.out.println("Clash free: " + clash_free);
         
         this.graph_drawer.add_new_child(node);
 
@@ -930,7 +900,6 @@ public class Reasoner {
             while(Files.exists(path)){
                 filename = "graph" + "_" + duplicate_index++ + ".rdf";
                 path = Paths.get(save_path + "\\" + filename);
-                System.out.println(path);
             }
 
             RDFWriter writer = this.rdf_model.getWriter("RDF/XML");
@@ -950,7 +919,7 @@ public class Reasoner {
 
     public boolean check_consistency(String save_path, boolean lazy_unfolding){
         File labels_dir = new File("./labels");
-        File graphs_dir = new File("./graphs");
+        File graphs_dir = new File(save_path);
         boolean clash_free = false;
         Instant start, end;
         if(!labels_dir.exists()) labels_dir.mkdir();
@@ -972,13 +941,14 @@ public class Reasoner {
 
             this.graph_drawer.save_graph(save_path);
             this.save_rdf_graph(save_path);
+            System.out.println("Grafi salvati in " + save_path + "\n");
         }
         else{
             start = Instant.now();
             clash_free = this.tableau_algorithm(lazy_unfolding);
             end = Instant.now();
         }
-        System.out.println("\nElapsed Time: "+ Duration.between(start, end).toMillis()+"ms");
+        System.out.println("Elapsed Time: "+ Duration.between(start, end).toMillis()+"ms");
         return clash_free;
     }
 }

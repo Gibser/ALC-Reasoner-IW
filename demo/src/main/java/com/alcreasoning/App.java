@@ -35,7 +35,7 @@ public final class App {
 
     public static void main(String[] args) {
 
-        OntologyPreprocessor preproc = new OntologyPreprocessor("exam.owl");
+        OntologyPreprocessor preproc = new OntologyPreprocessor("midgard.owl");
         Pair<OWLClass, OWLClassExpression> concept = null;
 
         try {
@@ -58,11 +58,16 @@ public final class App {
             System.out.println();
         }
 
-        Reasoner r = build_reasoner_for_tableau(true, preproc, true);
-
-        System.out.println(r.check_consistency("./graphs/", true));
+        System.out.println(run_tableau(true, true, "./graphs/", preproc));
+        
     }
     
+    static String run_tableau(boolean lazy_unfolding, boolean draw_graph, String save_path, OntologyPreprocessor preproc){
+
+        Reasoner r = build_reasoner_for_tableau(lazy_unfolding, preproc, draw_graph);
+
+        return "\nSoddisfacibile: " + r.check_consistency(save_path, true);
+    }
 
     static Pair<OWLClass, OWLClassExpression> get_concept_from_input(OntologyPreprocessor preproc) throws IOException {
 
