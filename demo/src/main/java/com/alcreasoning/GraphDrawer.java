@@ -73,7 +73,14 @@ public class GraphDrawer {
     public Node add_L_x_to_node(Node node, HashSet<OWLObject> L_x, String individual_name){
         String file_path = this.write_L_x_to_file(L_x, individual_name);
         String[] name_split = individual_name.split("_");
-        String html = "<table cellspacing='0' cellpadding='4' border='1'><tr><td href=\"file:///" + System.getProperty("user.dir") + "\\" + file_path + "\">L<sub>" + name_split[0] + "<sub>" + name_split[1] + "</sub></sub></td></tr></table>";
+        String html = "<table cellspacing='0' cellpadding='4' border='1'><tr><td border='0' href=\"file:///" + System.getProperty("user.dir") + "\\" + file_path + "\">L<sub>" + name_split[0] + "<sub>" + name_split[1] + "</sub></sub></td></tr></table>";
+        return node.with(Label.html(html).external());
+    }
+
+    public Node add_L_x_to_node_with_blocking(Node node, HashSet<OWLObject> L_x, String individual_name){
+        String file_path = this.write_L_x_to_file(L_x, individual_name);
+        String[] name_split = individual_name.split("_");
+        String html = "<table cellspacing='0' cellpadding='4' border='1'><tr><td border='0' href=\"file:///" + System.getProperty("user.dir") + "\\" + file_path + "\">L<sub>" + name_split[0] + "<sub>" + name_split[1] + "</sub></sub></td></tr><tr><td bgcolor=\"#D7E32D\" border='0'>Blocking</td></tr></table>";
         return node.with(Label.html(html).external());
     }
 
