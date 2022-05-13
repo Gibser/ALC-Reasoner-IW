@@ -64,8 +64,6 @@ public class GraphDrawer {
     public Node create_new_node(HashSet<OWLObject> L_x, String individual_name){
         System.out.println("Nodo: " + this.graphviz_node_id);
         String file_path = this.write_L_x_to_file(L_x, individual_name);
-        //String html = "<table border='0'><tr><td><a href=\"file:///" + System.getProperty("user.dir") + "\\" + file_path + "\">L_" + individual_name + "</a></td></tr></table>";
-        //String html = "<a href=\"file:///" + System.getProperty("user.dir") + "\\" + file_path + "\">L_" + individual_name + "</a>";
         String html = "<table cellspacing='0' cellpadding='2' border='1'><tr><td href=\"file:///" + System.getProperty("user.dir") + "\\" + file_path + "\">L<sub>" + individual_name + "</sub></td></tr></table>";
         System.out.println(html);
         Node child_node = node("" + this.graphviz_node_id++).with(Label.of(individual_name)).with(Label.html(html).external());
@@ -122,13 +120,11 @@ public class GraphDrawer {
 
     public Node add_new_child(Node node, String relation, String individual_name){
         Node child_node = this.create_new_node(individual_name);
-        //this.graph.add(this.add_link_to_node(node, child_node, relation));
         this.node_list.add(this.add_link_to_node(node, child_node, relation));
         return child_node;
     }
 
     public Node add_new_child(Node parent_node, Node child_node, String relation){
-        //this.graph.add(this.add_link_to_node(node, child_node, relation));
         this.node_list.add(this.add_link_to_node(parent_node, child_node, relation));
         return child_node;
     }

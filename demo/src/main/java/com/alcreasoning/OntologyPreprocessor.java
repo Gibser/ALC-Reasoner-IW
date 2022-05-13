@@ -42,25 +42,6 @@ public class OntologyPreprocessor {
     private HashSet<OWLLogicalAxiom> tbox_set;
     private Pair<OWLClass, OWLClassExpression> concept;
     private OWLDataFactory factory;
-    
-    /*
-    public OntologyPreprocessor(String concept_path, String tbox_path){
-        File concept_file = new File(concept_path);
-        File tbox_file = new File(tbox_path);
-        this.factory = concept_man.getOWLDataFactory();
-        this.v = new FunnyVisitor();
-        this.atomic_visitor = new AtomicConceptVisitor();
-        this.or_and_preproc_visitor = new OrAndPreprocessorVisitor();
-        this.tbox_set = new HashSet<>();
-    
-        try{
-            this.tbox = tbox_man.loadOntologyFromOntologyDocument(tbox_file);
-            this.concept = concept_man.loadOntologyFromOntologyDocument(concept_file);
-        }catch(OWLOntologyCreationException e){
-            e.printStackTrace();
-        }
-    }
-    */
 
     private OntologyPreprocessor(){
         this.v = AllVisitors.printer_visitor;
@@ -181,12 +162,6 @@ public class OntologyPreprocessor {
         }
         return preprocessed_disj;
     }
-
-    /*
-    private OWLClassExpression preprocess_disjointness(OWLDisjointClassesAxiom disjointness){
-        return this.preprocess_subclassof(this.convert_disjointness(disjointness));
-    }
-    */
 
     private OWLClassExpression preprocess_tbox(HashSet<OWLLogicalAxiom> T_g){
         HashSet<OWLClassExpression> preprocessed_tbox = new HashSet<>();
@@ -351,7 +326,6 @@ public class OntologyPreprocessor {
         HashSet<OWLClass> right_side_T_u = new HashSet<>();
 
         for(OWLLogicalAxiom axm : this.tbox_set){
-            //axm.accept(this.v);
             if(!is_left_side_atomic(axm))
                 T_g.add(axm);
             else{

@@ -33,7 +33,7 @@ public final class App {
 
     public static void main(String[] args) {
 
-        OntologyPreprocessor preproc = new OntologyPreprocessor("midgard.owl");
+        OntologyPreprocessor preproc = new OntologyPreprocessor("prove_KB\\exam.owl");
         Pair<OWLClass, OWLClassExpression> concept = null;
 
         try {
@@ -56,7 +56,7 @@ public final class App {
             System.out.println();
         }
 
-        System.out.println(run_tableau(true, true, "./graphs/", preproc));
+        System.out.println(run_tableau(false, true, "./graphs/", preproc));
         
     }
     

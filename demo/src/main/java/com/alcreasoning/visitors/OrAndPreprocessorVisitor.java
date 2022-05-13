@@ -37,27 +37,17 @@ public class OrAndPreprocessorVisitor implements OWLObjectVisitor{
 
 
     public void visit(OWLObjectUnionOf union) {
-        /*
-        System.out.print("\nProcesso ");
-        union.accept(this.v);
-        System.out.println();
-        */
         HashSet<OWLClassExpression> operands = new HashSet<>();
 
         for (OWLClassExpression c : union.getOperands()) {
             c.accept(this);
-            /*
-            System.out.print("ret_expr or: ");
-            ret_expr.accept(this.v);
-            System.out.println();
-            */
             if (!ret_expr.equals(this.factory.getOWLThing())) {
                 OWLObjectComplementOf not_a = this.factory.getOWLObjectComplementOf(ret_expr);
 
                 if (ret_expr.equals(this.factory.getOWLNothing()))
                     continue;
 
-                if (!union.getOperands().contains(not_a.getNNF())) //&& !ret_expr.equals(this.factory.getOWLNothing()))
+                if (!union.getOperands().contains(not_a.getNNF()))
                     operands.add(ret_expr);
                 else {
                     ret_expr = this.factory.getOWLThing();
@@ -70,44 +60,24 @@ public class OrAndPreprocessorVisitor implements OWLObjectVisitor{
 
         if (operands.size() > 1) {
             ret_expr = this.factory.getOWLObjectUnionOf(operands);
-            /*
-            System.out.print("\nAggiungo: ");
-            ret_expr.accept(this.v);
-            System.out.println();
-            */
         } else if (operands.size() == 1) {
             this.ret_expr = operands.iterator().next();
-            /*
-            System.out.print("\nAggiungo: ");
-            ret_expr.accept(this.v);
-            System.out.println();
-            */
         }
     }
 
     
     public void visit(OWLObjectIntersectionOf intersection) {
-        /*
-        System.out.print("\nProcesso ");
-        intersection.accept(this.v);
-        System.out.println();
-        */
         HashSet<OWLClassExpression> operands = new HashSet<>();
 
         for (OWLClassExpression c : intersection.getOperands()) {
             c.accept(this);
-            /*
-            System.out.print("ret_expr and: ");
-            ret_expr.accept(this.v);
-            System.out.println();
-            */
             if (!ret_expr.equals(this.factory.getOWLNothing())) {
                 OWLObjectComplementOf not_a = this.factory.getOWLObjectComplementOf(ret_expr);
 
                 if (ret_expr.equals(this.factory.getOWLThing()))
                     continue;
 
-                if (!intersection.getOperands().contains(not_a.getNNF())) //&& !ret_expr.equals(this.factory.getOWLThing()))
+                if (!intersection.getOperands().contains(not_a.getNNF()))
                     operands.add(ret_expr);
                 else {
                     ret_expr = this.factory.getOWLNothing();
@@ -120,18 +90,8 @@ public class OrAndPreprocessorVisitor implements OWLObjectVisitor{
 
         if (operands.size() > 1) {
             ret_expr = this.factory.getOWLObjectIntersectionOf(operands);
-            /*
-            System.out.print("\nAggiungo: ");
-            ret_expr.accept(this.v);
-            System.out.println();
-            */
         } else if (operands.size() == 1) {
             this.ret_expr = operands.iterator().next();
-            /*
-            System.out.print("\nAggiungo: ");
-            ret_expr.accept(this.v);
-            System.out.println();
-            */
         }
     }
 

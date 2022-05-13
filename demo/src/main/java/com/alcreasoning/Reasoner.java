@@ -10,7 +10,9 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.Duration;
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.stream.Collectors;
 
 import com.alcreasoning.visitors.AllVisitors;
@@ -67,7 +69,6 @@ public class Reasoner {
     
     private Model rdf_model;  
     private Resource last_child_rdf;
-    
 
     private Reasoner(){
         this.and_visitor = AllVisitors.and_visitor;
@@ -85,18 +86,8 @@ public class Reasoner {
         this.draw_graph = draw_graph;
         if (this.draw_graph)
             rdf_model = ModelFactory.createDefaultModel();
-        //this.graph = ModelFactory.createDefaultModel();
     }
     
-    /*
-    public Reasoner(OWLClassExpression concept_name, OWLClassExpression concept, IRI ontology_iri, boolean draw_graph){
-        this(ontology_iri, draw_graph);
-        this.L_x.add(concept);
-        this.root = this.create_individual();
-        this.add_axiom_to_abox(concept_name, root);
-    }
-    */
-
     public Reasoner(OWLClassExpression Ĉ, HashSet<OWLClassExpression> KB_with_concept_name,
         HashSet<OWLClassExpression> KB_with_concept, IRI ontology_iri, boolean draw_graph) {
         this(ontology_iri, draw_graph);
@@ -132,9 +123,9 @@ public class Reasoner {
         return true;
     } 
 
-    private void print_L_x(HashSet<OWLObject> L_x){
+    private void print_L_x(HashSet<OWLObject> L_x, String name){
         int i = 0;
-        System.out.print("L_x = {");
+        System.out.print(name + " = {");
         for(OWLObject obj : L_x){
             obj.accept(this.printer_visitor);
             if(i++ < L_x.size()-1) System.out.print(", "); else System.out.print("}\n");
@@ -161,12 +152,6 @@ public class Reasoner {
             if(i++ < this.abox.size()-1) System.out.print(", "); else System.out.print("}\n");
         }
     }
-
-    /*
-    private boolean add_axiom_to_abox(OWLObjectPropertyExpression relation, OWLNamedIndividual x1, OWLNamedIndividual x2){
-        return this.abox.add(this.instantiate_property_axiom(relation, x1, x2));
-    }
-    */
 
     private boolean add_axiom_to_abox(OWLObject axm, OWLNamedIndividual x){
         return this.abox.add(this.factory.getOWLClassAssertionAxiom((OWLClassExpression) axm, x));
@@ -272,14 +257,14 @@ public class Reasoner {
         OWLObjectPropertyAssertionAxiom instantiated_property_axiom = this.instantiate_property_axiom(property, x, child);
                 
         if(this.add_axiom_to_abox(instantiated_axiom))
-            added_axioms.add(instantiated_axiom);                                                                          // Si aggiunge C(child) all'ABox
+            added_axioms.add(instantiated_axiom);                       // Si aggiunge C(child) all'ABox
         
-        if(this.add_axiom_to_abox(instantiated_property_axiom))                                                            // Si aggiunge R(x, child) all'ABox 
+        if(this.add_axiom_to_abox(instantiated_property_axiom))         // Si aggiunge R(x, child) all'ABox 
             added_axioms.add(instantiated_property_axiom);
         
-        L_child.add(filler);                                                                                    // L(x') U {C};
+        L_child.add(filler);                                            // L(x') U {C};
             
-        if (this.Ĉ != null) { // TBox non vuota: L(x') U {Ĉ}
+        if (this.Ĉ != null) {                                           // TBox non vuota: L(x') U {Ĉ}
             L_child.add(this.Ĉ);
             instantiated_axiom = this.instantiate_axiom(this.Ĉ, child);
             if (this.add_axiom_to_abox(instantiated_axiom)) // Si aggiunge Ĉ(child) all'ABox
@@ -291,7 +276,7 @@ public class Reasoner {
     
     private HashSet<OWLObject> all_values_rule(HashSet<OWLObjectAllValuesFrom> owl_all_values_set, HashSet<OWLObject> L_child, OWLNamedIndividual child, OWLObjectPropertyExpression property) {
         HashSet<OWLObject> added_axioms = new HashSet<>();
-        owl_all_values_set.stream()                                                                             // forall R.D
+        owl_all_values_set.stream()                                                                         // forall R.D
         .filter(e -> e.getProperty().equals(property))                                                      // Filtra i per ogni con la stessa relazione R
         .forEach(e -> {
                         L_child.add(e.getFiller());
@@ -309,7 +294,7 @@ public class Reasoner {
     
     private boolean or_rule_condition(HashSet<OWLClassExpression> elements, OWLNamedIndividual x) {
         for (OWLClassExpression disj : elements) {
-            if (this.abox.contains(this.instantiate_axiom((OWLClassExpression) disj, x))) {
+            if (this.abox.contains(this.instantiate_axiom(disj, x))) {
                 return false;
             }
         }
@@ -335,7 +320,7 @@ public class Reasoner {
 
     
     //Con grafo
-    public boolean tableau_algorithm_non_empty_tbox(OWLNamedIndividual x, HashSet<OWLObject> L_parent, HashSet<OWLObject> L_x, Node node, Resource node_rdf){
+    public boolean tableau_algorithm_non_empty_tbox(OWLNamedIndividual x, List<HashSet<OWLObject>> blocking_list, HashSet<OWLObject> L_x, Node node, Resource node_rdf){
         HashSet<OWLClassExpression> disjointed;
         HashSet<OWLObjectSomeValuesFrom> owl_some_values_set;
         HashSet<OWLObjectAllValuesFrom> owl_all_values_set;
@@ -345,7 +330,7 @@ public class Reasoner {
         added_joint = this.and_rule(L_x);
 
         // Blocking
-        if (this.Ĉ != null && this.blocking(L_parent, L_x)) {
+        if (this.Ĉ != null && this.blocking(blocking_list, L_x)) {
             System.out.println("Blocking");
             return true;
         }
@@ -357,11 +342,12 @@ public class Reasoner {
         // RDF
         node_rdf.addProperty(this.rdf_model.createProperty(this.ontology_iri + "/#L_x"), this.graph_drawer.return_set_as_string(L_x, "L_" + x.getIRI().getShortForm()));
         
-        if(!this.check_not_clash(L_x)){
+        /*
+        if(!(clash_free = this.check_not_clash(L_x))){
             this.clash_rollback_all(L_x, added_joint, x, node, node_rdf);
             return false;
         }
-        
+        */
         for(OWLObjectUnionOf obj : this.disjunctions(L_x)){
             
             obj.accept(or_visitor);
@@ -378,7 +364,7 @@ public class Reasoner {
                     Resource rdf_union_node = this.rdf_model.createResource();
                     node_rdf.addProperty(this.rdf_model.createProperty(this.ontology_iri + "/#union"), rdf_union_node);
 
-                    clash_free = this.tableau_algorithm_non_empty_tbox(x, null, L_x, this.last_child, rdf_union_node);
+                    clash_free = this.tableau_algorithm_non_empty_tbox(x, blocking_list, L_x, this.last_child, rdf_union_node);
                     
                     if(clash_free)
                         break;
@@ -412,15 +398,15 @@ public class Reasoner {
             OWLClassExpression filler = obj.getFiller();
             OWLObjectPropertyExpression property = obj.getProperty();
             
-            if(filler.equals(this.factory.getOWLNothing())){                    // Non creo un figlio se il filler è bottom
+            if(filler.equals(this.factory.getOWLNothing())){                                // Non creo un figlio se il filler è bottom
                 this.clash_rollback_all(L_x, added_joint, x, node, node_rdf);
                 return false;                                          
             }
 
             if(this.exists_rule_conditions(property, filler, x)){
                 HashSet<OWLObject> added_axioms;
-                HashSet<OWLObject> L_child = new HashSet<>();                                                           // L_child rappresenta L(x')
-                OWLNamedIndividual child = create_individual(); // Creo nuovo figlio child
+                HashSet<OWLObject> L_child = new HashSet<>();                               // L_child rappresenta L(x')
+                OWLNamedIndividual child = create_individual();                             // Creo nuovo figlio child
 
                 added_axioms = this.exists_rule(L_x, x, L_child, child, obj);
                                                                                                                         
@@ -433,7 +419,8 @@ public class Reasoner {
                 property.accept(this.return_visitor);
                 node_rdf.addProperty(this.rdf_model.createProperty(this.ontology_iri + "/#" + this.return_visitor.get_and_destroy_return_string()), this.last_child_rdf);
 
-                clash_free = this.tableau_algorithm_non_empty_tbox(child, L_x, L_child, this.last_child, this.last_child_rdf);
+                blocking_list.add(L_x);
+                clash_free = this.tableau_algorithm_non_empty_tbox(child, blocking_list, L_child, this.last_child, this.last_child_rdf);
 
                 if(!clash_free){
                     this.clash_rollback_all(L_x, added_joint, x);
@@ -453,7 +440,7 @@ public class Reasoner {
     }
 
     // Senza grafo
-    public boolean tableau_algorithm_non_empty_tbox(OWLNamedIndividual x, HashSet<OWLObject> L_parent, HashSet<OWLObject> L_x){
+    public boolean tableau_algorithm_non_empty_tbox(OWLNamedIndividual x, List<HashSet<OWLObject>> blocking_list, HashSet<OWLObject> L_x){
         HashSet<OWLClassExpression> disjointed;
         HashSet<OWLObjectSomeValuesFrom> owl_some_values_set;
         HashSet<OWLObjectAllValuesFrom> owl_all_values_set;
@@ -463,17 +450,19 @@ public class Reasoner {
         added_joint = this.and_rule(L_x);
 
         // Blocking
-        if(this.Ĉ != null && this.blocking(L_parent, L_x)){
+        if(this.Ĉ != null && this.blocking(blocking_list, L_x)){
             System.out.println("Blocking");
             return true;
         }
 
         this.addall_axiom_to_abox(added_joint, x);
 
+        /*
         if(!this.check_not_clash(L_x)){
             this.clash_rollback_all(L_x, added_joint, x);
             return false;
         }
+        */
         
         for(OWLObjectUnionOf obj : this.disjunctions(L_x)){
             
@@ -485,7 +474,7 @@ public class Reasoner {
                     L_x.add(disj);
                     this.add_axiom_to_abox(disj, x);
                     
-                    clash_free = this.tableau_algorithm_non_empty_tbox(x, null, L_x);
+                    clash_free = this.tableau_algorithm_non_empty_tbox(x, blocking_list, L_x);
                     
                     if(clash_free)
                         break; 
@@ -532,7 +521,8 @@ public class Reasoner {
                                                                                                                         
                 added_axioms.addAll(this.all_values_rule(owl_all_values_set, L_child, child, property));
                 
-                clash_free = this.tableau_algorithm_non_empty_tbox(child, L_x, L_child);
+                blocking_list.add(L_x);
+                clash_free = this.tableau_algorithm_non_empty_tbox(child, blocking_list, L_child);
 
                 if(!clash_free){
                     this.clash_rollback_all(L_x, added_joint, x);
@@ -568,9 +558,24 @@ public class Reasoner {
         return added_axioms;
     }
 
+    /*
     private boolean blocking(HashSet<OWLObject> L_parent, HashSet<OWLObject> L_x){
+        if(L_parent != null)
+            this.print_L_x(L_parent, "L_parent");
+        this.print_L_x(L_x, "L_x");
         return L_parent == null ? false : L_parent.containsAll(L_x);
     }
+    */
+
+    private boolean blocking(List<HashSet<OWLObject>> blocking_list, HashSet<OWLObject> L_x){
+        if(!blocking_list.isEmpty())
+            for(HashSet<OWLObject> L_parent : blocking_list){
+                if(L_parent.containsAll(L_x))
+                    return true;
+            }
+        return false;
+    }
+
 
     private boolean contains_and(HashSet<OWLClassExpression> added_lazy){
         if(added_lazy.isEmpty())
@@ -584,7 +589,7 @@ public class Reasoner {
     }
 
     //Con grafo
-    public boolean tableau_algorithm_non_empty_tbox_lazy_unfolding(OWLNamedIndividual x, HashSet<OWLObject> L_parent, HashSet<OWLObject> L_x, Node node, Resource node_rdf){
+    public boolean tableau_algorithm_non_empty_tbox_lazy_unfolding(OWLNamedIndividual x, List<HashSet<OWLObject>> blocking_list, HashSet<OWLObject> L_x, Node node, Resource node_rdf){
         HashSet<OWLClassExpression> disjointed;
         HashSet<OWLObjectSomeValuesFrom> owl_some_values_set;
         HashSet<OWLObjectAllValuesFrom> owl_all_values_set;
@@ -606,7 +611,7 @@ public class Reasoner {
         }
 
         // Blocking
-        if(this.blocking(L_parent, L_x)){
+        if(this.blocking(blocking_list, L_x)){
             System.out.println("Blocking");
             return true;
         }
@@ -618,11 +623,12 @@ public class Reasoner {
 
         this.addall_axiom_to_abox(added_conj_lazy, x);
 
+        /*
         if(!this.check_not_clash(L_x)){
             this.clash_rollback_all(L_x, added_conj_lazy, x, node, node_rdf);
             return false;
         }
-
+        */
         for(OWLClassExpression obj : this.disjunctions(L_x)){
             obj.accept(or_visitor);
             disjointed = or_visitor.get_rule_set_and_reset();
@@ -638,7 +644,7 @@ public class Reasoner {
                     this.last_child_rdf = this.rdf_model.createResource();
                     node_rdf.addProperty(this.rdf_model.createProperty(this.ontology_iri + "/#union"), this.last_child_rdf);
 
-                    clash_free = this.tableau_algorithm_non_empty_tbox_lazy_unfolding(x, null, L_x, this.last_child, this.last_child_rdf);
+                    clash_free = this.tableau_algorithm_non_empty_tbox_lazy_unfolding(x, blocking_list, L_x, this.last_child, this.last_child_rdf);
 
                     if(clash_free)
                         break;
@@ -693,8 +699,9 @@ public class Reasoner {
                 this.last_child_rdf = this.rdf_model.createResource(child.getIRI().toString());
                 property.accept(this.return_visitor);
                 node_rdf.addProperty(this.rdf_model.createProperty(this.ontology_iri + "/#" + this.return_visitor.get_and_destroy_return_string()), this.last_child_rdf);
-                  
-                clash_free = this.tableau_algorithm_non_empty_tbox_lazy_unfolding(child, L_x, L_child, this.last_child, this.last_child_rdf);
+                
+                blocking_list.add(L_x);
+                clash_free = this.tableau_algorithm_non_empty_tbox_lazy_unfolding(child, blocking_list, L_child, this.last_child, this.last_child_rdf);
 
                 if(!clash_free){
                     this.clash_rollback_all(L_x, added_conj_lazy, x);
@@ -714,7 +721,7 @@ public class Reasoner {
     }
 
     //Senza grafo
-    public boolean tableau_algorithm_non_empty_tbox_lazy_unfolding(OWLNamedIndividual x, HashSet<OWLObject> L_parent, HashSet<OWLObject> L_x){
+    public boolean tableau_algorithm_non_empty_tbox_lazy_unfolding(OWLNamedIndividual x, List<HashSet<OWLObject>> blocking_list, HashSet<OWLObject> L_x){
         HashSet<OWLClassExpression> disjointed;
         HashSet<OWLObjectSomeValuesFrom> owl_some_values_set;
         HashSet<OWLObjectAllValuesFrom> owl_all_values_set;
@@ -736,17 +743,19 @@ public class Reasoner {
         }
 
         // Blocking
-        if(this.blocking(L_parent, L_x)){
+        if(this.blocking(blocking_list, L_x)){
             System.out.println("Blocking");
             return true;
         }
 
         this.addall_axiom_to_abox(added_conj_lazy, x);
 
+        /*
         if(!this.check_not_clash(L_x)){
             this.clash_rollback_all(L_x, added_conj_lazy, x);
             return false;
         }
+        */
 
         for(OWLClassExpression obj : this.disjunctions(L_x)){
             obj.accept(or_visitor);
@@ -757,7 +766,7 @@ public class Reasoner {
                     L_x.add(disj);
                     this.add_axiom_to_abox(disj, x);
 
-                    clash_free = this.tableau_algorithm_non_empty_tbox_lazy_unfolding(x, null, L_x);
+                    clash_free = this.tableau_algorithm_non_empty_tbox_lazy_unfolding(x, blocking_list, L_x);
 
                     if(clash_free)
                         break;
@@ -804,7 +813,8 @@ public class Reasoner {
                                                                                                                         
                 added_axioms.addAll(this.all_values_rule(owl_all_values_set, L_child, child, property));
 
-                clash_free = this.tableau_algorithm_non_empty_tbox_lazy_unfolding(child, L_x, L_child);
+                blocking_list.add(L_x);
+                clash_free = this.tableau_algorithm_non_empty_tbox_lazy_unfolding(child, blocking_list, L_child);
 
                 if(!clash_free){
                     this.clash_rollback_all(L_x, added_conj_lazy, x);
@@ -827,19 +837,21 @@ public class Reasoner {
 
     public boolean tableau_algorithm(boolean lazy_unfolding){
         boolean clash_free = false;
+        List<HashSet<OWLObject>> blocking_list = new ArrayList<>();
         if(lazy_unfolding)
-            clash_free = this.tableau_algorithm_non_empty_tbox_lazy_unfolding(this.root, null, this.L_x);
+            clash_free = this.tableau_algorithm_non_empty_tbox_lazy_unfolding(this.root, blocking_list, this.L_x);
         else
-            clash_free = this.tableau_algorithm_non_empty_tbox(this.root, null, this.L_x);
+            clash_free = this.tableau_algorithm_non_empty_tbox(this.root, blocking_list, this.L_x);
         return clash_free;
     }
 
     public boolean tableau_algorithm_draw_graph(boolean lazy_unfolding, Node root_node, Resource root_rdf){
         boolean clash_free = false;
+        List<HashSet<OWLObject>> blocking_list = new ArrayList<>();
         if(lazy_unfolding)
-            clash_free = this.tableau_algorithm_non_empty_tbox_lazy_unfolding(this.root, null, this.L_x, root_node, root_rdf);
+            clash_free = this.tableau_algorithm_non_empty_tbox_lazy_unfolding(this.root, blocking_list, this.L_x, root_node, root_rdf);
         else
-            clash_free = this.tableau_algorithm_non_empty_tbox(this.root, null, this.L_x, root_node, root_rdf);
+            clash_free = this.tableau_algorithm_non_empty_tbox(this.root, blocking_list, this.L_x, root_node, root_rdf);
         return clash_free;
     }
 
