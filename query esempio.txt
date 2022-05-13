@@ -1,0 +1,8 @@
+Elf and useInCombat some Elf
+Human and useInCombat some Sword
+Human and useInCombat some Magic
+Orc and Human
+Human and Elf
+Elf and useInCombat some Magic
+Elf and useInCombat some Sword
+(Human and Orc) or ((useInCombat some (Sword or Magic)) and owl:Nothing) or (useInCombat some (Sword or Magic) and (useInCombat some Sword))

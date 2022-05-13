@@ -2,17 +2,14 @@ package com.alcreasoning;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileOutputStream;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.io.Writer;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.Duration;
 import java.time.Instant;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.stream.Collectors;
 
@@ -24,46 +21,32 @@ import com.alcreasoning.visitors.PrinterVisitor;
 
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.ModelFactory;
-import org.apache.jena.rdf.model.Property;
 import org.apache.jena.rdf.model.RDFWriter;
 import org.apache.jena.rdf.model.Resource;
-import org.apache.jena.util.FileUtils;
 import org.semanticweb.owlapi.model.IRI;
 import org.semanticweb.owlapi.model.OWLClass;
 import org.semanticweb.owlapi.model.OWLClassAssertionAxiom;
 import org.semanticweb.owlapi.model.OWLClassExpression;
 import org.semanticweb.owlapi.model.OWLDataFactory;
 import org.semanticweb.owlapi.model.OWLEquivalentClassesAxiom;
-import org.semanticweb.owlapi.model.OWLIndividual;
 import org.semanticweb.owlapi.model.OWLLogicalAxiom;
 import org.semanticweb.owlapi.model.OWLNamedIndividual;
 import org.semanticweb.owlapi.model.OWLObject;
 import org.semanticweb.owlapi.model.OWLObjectAllValuesFrom;
-import org.semanticweb.owlapi.model.OWLObjectComplementOf;
 import org.semanticweb.owlapi.model.OWLObjectIntersectionOf;
-import org.semanticweb.owlapi.model.OWLObjectProperty;
 import org.semanticweb.owlapi.model.OWLObjectPropertyAssertionAxiom;
 import org.semanticweb.owlapi.model.OWLObjectPropertyExpression;
 import org.semanticweb.owlapi.model.OWLObjectSomeValuesFrom;
 import org.semanticweb.owlapi.model.OWLObjectUnionOf;
-import org.semanticweb.owlapi.model.OWLPropertyAssertionAxiom;
 
-import guru.nidi.graphviz.attribute.Label;
-import guru.nidi.graphviz.attribute.Label.Justification;
-import guru.nidi.graphviz.engine.Format;
-import guru.nidi.graphviz.engine.Graphviz;
-import guru.nidi.graphviz.model.MutableGraph;
-import guru.nidi.graphviz.model.MutableNode;
 import guru.nidi.graphviz.model.Node;
-
-import static guru.nidi.graphviz.model.Factory.*;
 
 public class Reasoner {
     private static final char union = '\u2294';
 
     private AndVisitor and_visitor;
     private OrVisitor or_visitor;
-    private PrinterVisitor v;
+    private PrinterVisitor printer_visitor;
     private PrinterVisitor return_visitor;
     private LazyUnfoldingVisitor lazy_unfolding_v;
 
@@ -89,7 +72,7 @@ public class Reasoner {
     private Reasoner(){
         this.and_visitor = AllVisitors.and_visitor;
         this.or_visitor = AllVisitors.or_visitor;
-        this.v = AllVisitors.printer_visitor;
+        this.printer_visitor = AllVisitors.printer_visitor;
         this.return_visitor = AllVisitors.printer_v_save_string;
     }
 
@@ -153,7 +136,7 @@ public class Reasoner {
         int i = 0;
         System.out.print("L_x = {");
         for(OWLObject obj : L_x){
-            obj.accept(this.v);
+            obj.accept(this.printer_visitor);
             if(i++ < L_x.size()-1) System.out.print(", "); else System.out.print("}\n");
         }
     }
@@ -174,7 +157,7 @@ public class Reasoner {
         int i = 0;
         System.out.print("ABox = {");
         for(OWLObject obj : this.abox){
-            obj.accept(this.v);
+            obj.accept(this.printer_visitor);
             if(i++ < this.abox.size()-1) System.out.print(", "); else System.out.print("}\n");
         }
     }
@@ -229,13 +212,13 @@ public class Reasoner {
         this.abox.removeAll(axms);
     }
 
-    private Node update_graph(boolean or_branch, Node node, String parent_name, String individual_name, OWLObjectPropertyExpression property){
+    private Node update_graph(boolean or_branch, Node node, String parent_name, String individual_name, OWLObject operand){
         Node child_node = null;
         if(this.draw_graph){
+            operand.accept(this.return_visitor);
             if(or_branch)
-                child_node = this.graph_drawer.add_new_child(node, "" + union, individual_name);
+                child_node = this.graph_drawer.add_new_child(node, "" + union + ": " + this.return_visitor.get_and_destroy_return_string(), individual_name);
             else{
-                property.accept(this.return_visitor);
                 child_node = this.graph_drawer.add_new_child(node, this.return_visitor.get_and_destroy_return_string() + ":" + parent_name, individual_name);
             }
         }
@@ -379,27 +362,7 @@ public class Reasoner {
             return false;
         }
         
-        ////
-        System.out.println();
-        System.out.println("############# Chiamata ricorsiva #############");
-        System.out.print("Inizio chiamata. ");
-        
-        this.print_L_x(L_x);
-        System.out.println();
-        this.print_abox();
-        System.out.println();
-        System.out.println("-----------------------------------");
-        System.out.println("Applicazione regola unione");
-        System.out.println("-----------------------------------");
-        ////
-
         for(OWLObjectUnionOf obj : this.disjunctions(L_x)){
-            
-            ////
-            System.out.print("Processo ");
-            obj.accept(v);
-            System.out.println();
-            ////
             
             obj.accept(or_visitor);
             disjointed = or_visitor.get_rule_set_and_reset();
@@ -409,14 +372,8 @@ public class Reasoner {
                     L_x.add(disj);
                     this.add_axiom_to_abox(disj, x);
                     
-                    ////
-                    System.out.print("Aggiungo ");
-                    disj.accept(this.v);
-                    System.out.println();
-                    ////
-                    
                     // Grafo
-                    this.last_child = this.update_graph(true, node, null, x.getIRI().getShortForm(), null);
+                    this.last_child = this.update_graph(true, node, null, x.getIRI().getShortForm(), disj);
                     // RDF
                     Resource rdf_union_node = this.rdf_model.createResource();
                     node_rdf.addProperty(this.rdf_model.createProperty(this.ontology_iri + "/#union"), rdf_union_node);
@@ -432,7 +389,6 @@ public class Reasoner {
                 // quindi posso ritornare false
                 if(!clash_free){
                     this.clash_rollback_all(L_x, added_joint, x);
-                    System.out.println("Disgiunti terminati: " + clash_free + "\n");
                     return false;
                 }
             }
@@ -451,9 +407,6 @@ public class Reasoner {
         owl_some_values_set = L_x.stream().filter(e -> (e instanceof OWLObjectSomeValuesFrom)).map(e -> (OWLObjectSomeValuesFrom)e).collect(Collectors.toCollection(HashSet::new));
         owl_all_values_set = L_x.stream().filter(e -> (e instanceof OWLObjectAllValuesFrom)).map(e -> (OWLObjectAllValuesFrom)e).collect(Collectors.toCollection(HashSet::new));
         
-        System.out.println("-----------------------------------");
-        System.out.println("Applicazione regola esiste");
-        System.out.println("-----------------------------------");
         
         for(OWLObjectSomeValuesFrom obj : owl_some_values_set){
             OWLClassExpression filler = obj.getFiller();
@@ -493,8 +446,6 @@ public class Reasoner {
                 }
             }
         }
-        System.out.println("Fine chiamata nodo " + x.getIRI().getShortForm());
-        System.out.println("Clash free: " + clash_free);
 
         this.graph_drawer.add_new_child(node);
 
@@ -682,7 +633,7 @@ public class Reasoner {
                     this.add_axiom_to_abox(disj, x);
 
                     // Grafo
-                    this.last_child = this.update_graph(true, node, null, x.getIRI().getShortForm(), null);
+                    this.last_child = this.update_graph(true, node, null, x.getIRI().getShortForm(), disj);
                     // RDF
                     this.last_child_rdf = this.rdf_model.createResource();
                     node_rdf.addProperty(this.rdf_model.createProperty(this.ontology_iri + "/#union"), this.last_child_rdf);
@@ -868,7 +819,7 @@ public class Reasoner {
     private void print_class_expression_set(HashSet<? extends OWLClassExpression> expr_set, String name) {
         System.out.print(name + " = {");
         for (OWLClassExpression expr : expr_set) {
-            expr.accept(this.v);
+            expr.accept(this.printer_visitor);
             System.out.print(", ");
         }
         System.out.println("}");
