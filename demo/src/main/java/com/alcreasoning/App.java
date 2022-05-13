@@ -27,8 +27,6 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 
-import javax.swing.plaf.TreeUI;
-
 public final class App {
     private App() {
     }
@@ -66,7 +64,7 @@ public final class App {
 
         Reasoner r = build_reasoner_for_tableau(lazy_unfolding, preproc, draw_graph);
 
-        return "\nSoddisfacibile: " + r.check_consistency(save_path, true);
+        return "\nSoddisfacibile: " + r.check_consistency(save_path, lazy_unfolding);
     }
 
     static Pair<OWLClass, OWLClassExpression> get_concept_from_input(OntologyPreprocessor preproc) throws IOException {
