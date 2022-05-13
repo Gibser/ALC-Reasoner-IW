@@ -120,6 +120,7 @@ public class OntologyPreprocessor {
         HashSet<OWLClassExpression> L_x = new HashSet<>();
         HashSet<OWLClassExpression> abox = new HashSet<>();
 
+        
         //
         System.out.print("Concetto: ");
         this.concept.getKey().accept(this.v);
@@ -127,7 +128,7 @@ public class OntologyPreprocessor {
         this.concept.getValue().accept(this.v);
         System.out.println();
         //
-
+        
         abox.add(this.concept.getKey());
         L_x.add(this.concept.getValue());
         return new Pair<HashSet<OWLClassExpression>, HashSet<OWLClassExpression>>(abox, L_x);
@@ -138,11 +139,13 @@ public class OntologyPreprocessor {
         OWLClassExpression conjunction = null;
 
         for(OWLLogicalAxiom ax : this.tbox_set){
+            
             /// fase di stampa della TBox
             System.out.print("TBox: ");
             ax.getNNF().accept(v);
             System.out.println();
             ///
+            
             if(ax instanceof OWLSubClassOfAxiom)
                 preprocessed_tbox.add(preprocess_subclassof((OWLSubClassOfAxiom)ax.getNNF()));
             else if(ax instanceof OWLEquivalentClassesAxiom)
@@ -168,11 +171,13 @@ public class OntologyPreprocessor {
         OWLClassExpression conjunction = null;
 
         for(OWLLogicalAxiom ax : T_g){
+            
             /// fase di stampa di T_g
             System.out.print("TBox: ");
             ax.getNNF().accept(v);
             System.out.println();
             ///
+            
             if(ax instanceof OWLSubClassOfAxiom)
                 preprocessed_tbox.add(this.preprocess_subclassof((OWLSubClassOfAxiom)ax.getNNF()));
             else if(ax instanceof OWLEquivalentClassesAxiom)

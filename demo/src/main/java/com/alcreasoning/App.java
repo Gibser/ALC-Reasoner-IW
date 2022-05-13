@@ -33,7 +33,7 @@ public final class App {
 
     public static void main(String[] args) {
 
-        OntologyPreprocessor preproc = new OntologyPreprocessor("prove_KB\\exam.owl");
+        OntologyPreprocessor preproc = new OntologyPreprocessor("midgard.owl");
         Pair<OWLClass, OWLClassExpression> concept = null;
 
         try {
@@ -56,14 +56,14 @@ public final class App {
             System.out.println();
         }
 
-        System.out.println(run_tableau(false, true, "./graphs/", preproc));
+        System.out.println(run_tableau(false, false, "./graphs/", preproc));
         
     }
     
     static String run_tableau(boolean lazy_unfolding, boolean draw_graph, String save_path, OntologyPreprocessor preproc){
 
         Reasoner r = build_reasoner_for_tableau(lazy_unfolding, preproc, draw_graph);
-
+        
         return "\nSoddisfacibile: " + r.check_consistency(save_path, lazy_unfolding) + "\n";
     }
 
@@ -111,6 +111,7 @@ public final class App {
         if(lazy_unfolding){
             Pair<HashSet<OWLLogicalAxiom>, HashSet<OWLLogicalAxiom>> T_g_and_T_u = preprocessor.partition_TBox();
 
+            /*
             //////Fase di stampa di T_g e T_u
             System.out.print("\nT_g = {");
             T_g_and_T_u.getKey().stream().forEach(e -> {e.accept(AllVisitors.printer_visitor); System.out.print(", ");});
@@ -120,7 +121,7 @@ public final class App {
             T_g_and_T_u.getValue().stream().forEach(e -> {e.accept(AllVisitors.printer_visitor); System.out.print(", ");});
             System.out.println("}");
             //////
-
+            */
             Pair<OWLClassExpression, Pair<HashSet<OWLClassExpression>, HashSet<OWLClassExpression>>> KB_and_Ĉ = preprocessor.preprocess_tbox_and_concept(T_g_and_T_u.getKey());
             r = new Reasoner(KB_and_Ĉ.getKey(), T_g_and_T_u.getValue(), KB_and_Ĉ.getValue().getKey(), KB_and_Ĉ.getValue().getValue(), preprocessor.get_tbox_ontology_IRI(), draw_graph);
         }
