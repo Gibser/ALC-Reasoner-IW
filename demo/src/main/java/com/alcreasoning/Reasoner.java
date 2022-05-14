@@ -933,7 +933,7 @@ public class Reasoner {
             clash_free = this.tableau_algorithm(lazy_unfolding);
             end = Instant.now();
         }
-        System.out.println("Elapsed Time: "+ Duration.between(start, end).toMillis()+"ms");
+        System.out.println("\n-------------------\nElapsed Time: "+ Duration.between(start, end).toMillis()+"ms\n-------------------");
         return clash_free;
     }
 }

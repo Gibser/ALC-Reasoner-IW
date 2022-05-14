@@ -36,6 +36,7 @@ public final class App {
         OntologyPreprocessor preproc = new OntologyPreprocessor("midgard.owl");
         Pair<OWLClass, OWLClassExpression> concept = null;
 
+        
         try {
             concept = get_concept_from_input(preproc);
         } catch (ParserException e) {
@@ -49,17 +50,19 @@ public final class App {
 
         preproc.set_concept(concept);
         System.out.println("\n\n\nLogical Axioms:\n");
-
+        
+        
         for (OWLAxiom ax : preproc.getTBox().getLogicalAxioms()) {
             System.out.print("Assioma: ");
             ax.getNNF().accept(AllVisitors.printer_visitor);
             System.out.println();
         }
-
-        System.out.println(run_tableau(false, false, "./graphs/", preproc));
+        System.out.println();
         
+        System.out.println(run_tableau(true, false, "./graphs/", preproc));
+
     }
-    
+
     static String run_tableau(boolean lazy_unfolding, boolean draw_graph, String save_path, OntologyPreprocessor preproc){
 
         Reasoner r = build_reasoner_for_tableau(lazy_unfolding, preproc, draw_graph);
@@ -103,25 +106,61 @@ public final class App {
         return new Pair<OWLClass, OWLClassExpression>(c_name, class_exp);
     }
 
+    static Pair<OWLClass, OWLClassExpression> get_concept_from_string(OntologyPreprocessor preproc, String input){
+
+        ShortFormProvider sfp = new AnnotationValueShortFormProvider(Arrays.asList(preproc.getFactory().getRDFSLabel()),
+                Collections.<OWLAnnotationProperty, List<String>>emptyMap(), OntologyPreprocessor.tbox_man);
+
+        BidirectionalShortFormProvider shortFormProvider = new BidirectionalShortFormProviderAdapter(
+                OntologyPreprocessor.tbox_man.getOntologies(), sfp);
+
+        ShortFormEntityChecker owlEntityChecker = new ShortFormEntityChecker(shortFormProvider);
+
+        ManchesterOWLSyntaxParser parser;
+        parser = OWLManager.createManchesterParser();
+        parser.setOWLEntityChecker(owlEntityChecker);
+        parser.setDefaultOntology(preproc.getTBox());
+
+        OWLClass c_name = preproc.getFactory()
+                .getOWLClass(preproc.getTBox().getOntologyID().getOntologyIRI().get() + "#Z");
+
+        OWLClassExpression class_exp = parser.parseClassExpression(input).getNNF();
+
+        OWLDeclarationAxiom concept_declaration = preproc.getFactory().getOWLDeclarationAxiom(c_name);
+        preproc.getTBox().add(concept_declaration);
+
+        return new Pair<OWLClass, OWLClassExpression>(c_name, class_exp);
+    }
     
+    static void print_T_g_T_u(Pair<HashSet<OWLLogicalAxiom>, HashSet<OWLLogicalAxiom>> T_g_and_T_u){
+        int i = 0;
+        System.out.print("\nT_g = {");
+        for(OWLLogicalAxiom ax : T_g_and_T_u.getKey()){
+            ax.accept(AllVisitors.printer_visitor);
+            if(i++ < T_g_and_T_u.getKey().size()-1) System.out.print(", ");
+        }
+        System.out.println("}");
+        i = 0;
+        System.out.print("T_u = {");
+        for(OWLLogicalAxiom ax : T_g_and_T_u.getValue()){
+            ax.accept(AllVisitors.printer_visitor);
+            if(i++ < T_g_and_T_u.getValue().size()-1) System.out.print(", ");
+        }
+        System.out.println("}");
+    }
+
     static Reasoner build_reasoner_for_tableau(boolean lazy_unfolding, OntologyPreprocessor preprocessor, boolean draw_graph){
 
         Reasoner r;
 
         if(lazy_unfolding){
             Pair<HashSet<OWLLogicalAxiom>, HashSet<OWLLogicalAxiom>> T_g_and_T_u = preprocessor.partition_TBox();
-
-            /*
+ 
             //////Fase di stampa di T_g e T_u
-            System.out.print("\nT_g = {");
-            T_g_and_T_u.getKey().stream().forEach(e -> {e.accept(AllVisitors.printer_visitor); System.out.print(", ");});
-            System.out.println("}");
-
-            System.out.print("T_u = {");
-            T_g_and_T_u.getValue().stream().forEach(e -> {e.accept(AllVisitors.printer_visitor); System.out.print(", ");});
-            System.out.println("}");
+            System.out.println("-------------------\nLazy unfolding\n-------------------");
+            print_T_g_T_u(T_g_and_T_u);
             //////
-            */
+            
             Pair<OWLClassExpression, Pair<HashSet<OWLClassExpression>, HashSet<OWLClassExpression>>> KB_and_Ĉ = preprocessor.preprocess_tbox_and_concept(T_g_and_T_u.getKey());
             r = new Reasoner(KB_and_Ĉ.getKey(), T_g_and_T_u.getValue(), KB_and_Ĉ.getValue().getKey(), KB_and_Ĉ.getValue().getValue(), preprocessor.get_tbox_ontology_IRI(), draw_graph);
         }
@@ -131,5 +170,21 @@ public final class App {
             r = new Reasoner(KB_and_Ĉ.getKey(), KB_and_Ĉ.getValue().getKey(), KB_and_Ĉ.getValue().getValue(), preprocessor.get_tbox_ontology_IRI(), draw_graph);
         }
         return r;
+    }
+
+    static void try_queries(OntologyPreprocessor preproc){
+        String[] queries = {"Elf and useInCombat some Elf", "Human and useInCombat some Sword", "Human and useInCombat some Magic",
+        "Orc and Human", "Human and Elf", "Elf and useInCombat some Magic", "Elf and useInCombat some Sword",
+        "(Human and Orc) or ((useInCombat some (Sword or Magic)) and owl:Nothing) or (useInCombat some (Sword or Magic) and (useInCombat some Sword))"
+       };
+        for(String query : queries){
+            preproc.set_concept(get_concept_from_string(preproc, query));
+            System.out.println("Query: " + query);
+            System.out.println(run_tableau(false, false, "./graphs/", preproc));
+            System.out.println(run_tableau(false, true, "./graphs/", preproc));
+            System.out.println(run_tableau(true, false, "./graphs/", preproc));
+            System.out.println(run_tableau(true, true, "./graphs/", preproc));
+            System.out.println("-----------------------------------------------");
+        }
     }
 }

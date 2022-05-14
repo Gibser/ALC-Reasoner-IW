@@ -122,7 +122,7 @@ public class OntologyPreprocessor {
 
         
         //
-        System.out.print("Concetto: ");
+        System.out.print("\nConcetto: ");
         this.concept.getKey().accept(this.v);
         System.out.print(" equivalent to ");
         this.concept.getValue().accept(this.v);
@@ -139,13 +139,13 @@ public class OntologyPreprocessor {
         OWLClassExpression conjunction = null;
 
         for(OWLLogicalAxiom ax : this.tbox_set){
-            
+            /*
             /// fase di stampa della TBox
             System.out.print("TBox: ");
             ax.getNNF().accept(v);
             System.out.println();
             ///
-            
+            */
             if(ax instanceof OWLSubClassOfAxiom)
                 preprocessed_tbox.add(preprocess_subclassof((OWLSubClassOfAxiom)ax.getNNF()));
             else if(ax instanceof OWLEquivalentClassesAxiom)
@@ -171,13 +171,13 @@ public class OntologyPreprocessor {
         OWLClassExpression conjunction = null;
 
         for(OWLLogicalAxiom ax : T_g){
-            
+            /*
             /// fase di stampa di T_g
             System.out.print("TBox: ");
             ax.getNNF().accept(v);
             System.out.println();
             ///
-            
+            */
             if(ax instanceof OWLSubClassOfAxiom)
                 preprocessed_tbox.add(this.preprocess_subclassof((OWLSubClassOfAxiom)ax.getNNF()));
             else if(ax instanceof OWLEquivalentClassesAxiom)
@@ -197,11 +197,13 @@ public class OntologyPreprocessor {
         else if(preprocessed_tbox.size() == 1)
             conjunction = preprocessed_tbox.iterator().next();
         
+        /*
         if(conjunction != null){
             System.out.println("\n");
             conjunction.accept(this.v);
             System.out.println("\n");
         }
+        */
         return conjunction;
     }
 
