@@ -149,6 +149,7 @@ public final class App {
         System.out.println("}");
     }
 
+    // In questa funzione si fa anche preprocessing sugli assiomi con OrAndPreprocessorVisitor
     static Reasoner build_reasoner_for_tableau(boolean lazy_unfolding, OntologyPreprocessor preprocessor, boolean draw_graph){
 
         Reasoner r;
@@ -162,6 +163,7 @@ public final class App {
             //////
             
             Pair<OWLClassExpression, Pair<HashSet<OWLClassExpression>, HashSet<OWLClassExpression>>> KB_and_Ĉ = preprocessor.preprocess_tbox_and_concept(T_g_and_T_u.getKey());
+            // KB_and_Ĉ.getKey() contiene T_g, KB_and_Ĉ.getValue().getKey() contiene C come nome di concetto, KB_and_Ĉ.getValue().getValue() contiene C come concetto
             r = new Reasoner(KB_and_Ĉ.getKey(), T_g_and_T_u.getValue(), KB_and_Ĉ.getValue().getKey(), KB_and_Ĉ.getValue().getValue(), preprocessor.get_tbox_ontology_IRI(), draw_graph);
         }
         else{

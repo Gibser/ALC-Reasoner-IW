@@ -436,7 +436,7 @@ public class Reasoner {
                     return false;
                 }
                 else{
-                    node = this.last_child;
+                    node = this.last_child;                 // Serve per rappresentare il ramo come unica computazione, quindi se x0 ha due figli, non ha due archi uscenti ma il ramo é x0--R:x_0-->x1--R:x_0-->x2
                     node_rdf = this.last_child_rdf;
                 }
             }

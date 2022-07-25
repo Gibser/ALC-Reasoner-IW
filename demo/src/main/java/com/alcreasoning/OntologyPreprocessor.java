@@ -306,6 +306,8 @@ public class OntologyPreprocessor {
     }
 
     private boolean is_T_u_graph_acyclic(OWLLogicalAxiom axm, HashSet<OWLClass> left_side_T_u, HashSet<OWLClass> right_side_T_u){
+        // Per controllare se il grafo delle dipendenze é aciclico controlliamo se l'insieme dei concetti atomici di sinistra dell'assioma é disgiunto
+        // rispetto a quello dei concetti atomici di destra di T_u e viceversa
         axm.accept(this.atomic_visitor);
         HashSet<OWLClass> left_side = this.atomic_visitor.get_left_side_concepts_and_clear();
         HashSet<OWLClass> right_side = this.atomic_visitor.get_right_side_concepts_and_clear();
